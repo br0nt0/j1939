@@ -1,0 +1,74 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"c-cpp-flylint.clang.enable": false,
+		"c-cpp-flylint.flexelint.enable": false,
+		"c-cpp-flylint.cppcheck.enable": true,
+		"c-cpp-flylint.cppcheck.standard": [
+			"c99",
+			"c++17"
+		],
+		"c-cpp-flylint.cppcheck.severityLevels": {
+			"error": "Error",
+			"warning": "Warning",
+			"style": "Information",
+			"performance": "Information",
+			"portability": "Information",
+			"information": "Information"
+		},
+		"c-cpp-flylint.cppcheck.addons": [
+			"lint/misra.json"
+		],
+		"c-cpp-flylint.cppcheck.includePaths": [
+			"src"
+		],
+		"c-cpp-flylint.cppcheck.extraArgs": [
+			"-j 4",
+			"--cppcheck-build-dir=./build"	
+		],
+		"c-cpp-flylint.cppcheck.suppressions": [
+			"misra-c2012-11.6",
+			"cstyleCast"
+		],
+		"c-cpp-flylint.lizard.enable": false,
+		"c-cpp-flylint.flawfinder.enable": false,
+		"c-cpp-flylint.excludeFromWorkspacePaths": [
+			"tests",
+			"build",
+			"lint"
+		],
+		"C_Cpp.formatting": "vcFormat",
+		"C_Cpp.autocompleteAddParentheses": true,
+		"C_Cpp.vcFormat.indent.accessSpecifiers": true,
+		"C_Cpp.vcFormat.indent.caseContents": true,
+		"C_Cpp.vcFormat.indent.caseLabels": true,
+		"C_Cpp.vcFormat.indent.preserveComments": true,
+		"C_Cpp.vcFormat.indent.preserveWithinParentheses": true,
+		"C_Cpp.vcFormat.indent.withinParentheses": "alignToParenthesis",
+		"C_Cpp.vcFormat.newLine.beforeOpenBrace.block": "newLine",
+		"C_Cpp.vcFormat.newLine.beforeOpenBrace.function": "newLine",
+		"C_Cpp.vcFormat.newLine.beforeOpenBrace.type": "newLine",
+		"C_Cpp.vcFormat.space.afterCastCloseParenthesis": true,
+		"C_Cpp.vcFormat.space.afterComma": true,
+		"C_Cpp.vcFormat.space.afterKeywordsInControlFlowStatements": true,
+		"C_Cpp.vcFormat.space.beforeInitializerListOpenBrace": true,
+		"C_Cpp.vcFormat.space.betweenEmptyBraces": true,
+		"C_Cpp.vcFormat.space.betweenEmptyLambdaBrackets": true,
+		"C_Cpp.vcFormat.space.betweenEmptyParameterListParentheses": true,
+		"C_Cpp.vcFormat.space.betweenEmptySquareBrackets": true,
+		"C_Cpp.vcFormat.space.insertAfterSemicolon": true,
+		"C_Cpp.vcFormat.space.withinCastParentheses": true,
+		"C_Cpp.vcFormat.space.withinControlFlowStatementParentheses": true,
+		"C_Cpp.vcFormat.space.withinExpressionParentheses": true,
+		"C_Cpp.vcFormat.space.withinInitializerListBraces": true,
+		"C_Cpp.vcFormat.space.withinLambdaBrackets": true,
+		"C_Cpp.vcFormat.space.withinParameterListParentheses": true,
+		"C_Cpp.vcFormat.space.withinSquareBrackets": true,
+		"editor.autoSurround": "languageDefined",
+		"editor.formatOnType": true
+	}
+}

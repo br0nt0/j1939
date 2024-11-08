@@ -1,0 +1,14 @@
+[
+{
+  "directory": "/home/br0nt0/workspace/j1939/build/utest/src",
+  "command": "/usr/bin/cc -DTESTING -DUNICODE -I/home/br0nt0/workspace/j1939/src -O0 -g -Wall -Wextra -Werror -Wpedantic -Wshadow -Wdouble-promotion -Wformat=2 -Wformat-truncation -Wundef -Wno-sign-conversion --coverage -o CMakeFiles/j1939.dir/main.c.o -c /home/br0nt0/workspace/j1939/src/main.c",
+  "file": "/home/br0nt0/workspace/j1939/src/main.c",
+  "output": "src/CMakeFiles/j1939.dir/main.c.o"
+},
+{
+  "directory": "/home/br0nt0/workspace/j1939/build/utest/tests",
+  "command": "/usr/bin/c++ -DTESTING -DUNICODE -I/home/br0nt0/workspace/j1939/src -O0 -g -Wall -Wextra -Werror -Wpedantic -Wshadow -Wdouble-promotion -Wformat=2 -Wformat-truncation -Wundef -Wno-sign-conversion -Wconversion -Wno-volatile -o CMakeFiles/j1939_uTests.dir/uTestMain.cpp.o -c /home/br0nt0/workspace/j1939/tests/uTestMain.cpp",
+  "file": "/home/br0nt0/workspace/j1939/tests/uTestMain.cpp",
+  "output": "tests/CMakeFiles/j1939_uTests.dir/uTestMain.cpp.o"
+}
+]
