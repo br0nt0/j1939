@@ -1,2 +1,0 @@
-/usr/bin/ar qc libj1939.a CMakeFiles/j1939.dir/main.c.o
-/usr/bin/ranlib libj1939.a
