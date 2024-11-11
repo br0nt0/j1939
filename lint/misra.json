@@ -1,0 +1,6 @@
+{
+	"script": "misra",
+	"args": [
+		"--rule-texts=lint/MISRAC2012_Rules.txt"
+	]
+}
