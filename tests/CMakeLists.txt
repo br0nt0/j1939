@@ -41,8 +41,10 @@ add_executable(${TEST_EXECUTABLE})
 
 set(UT_DIR			                ${PRJ_ROOT_DIR}/tests)
 target_sources(${TEST_EXECUTABLE} PRIVATE
-                                    ${UT_DIR}/fooTests.cpp
                                     ${UT_DIR}/uTestMain.cpp)
+add_subdirectory(drivers)
+add_subdirectory(j1939)
+
 
 target_compile_definitions(${TEST_EXECUTABLE} PRIVATE
                                     ${COMMON_DEFINES})

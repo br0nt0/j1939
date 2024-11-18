@@ -1,0 +1,33 @@
+/*******************************************************************************
+ * @file	j1939StackInterface.h
+ * @brief	
+ * @author	@br0nt0
+ * @date	2024
+ ******************************************************************************/
+#ifndef J1939STACKINTERFACE_H_
+#define J1939STACKINTERFACE_H_
+/******************************************************************************/
+
+typedef struct j1939MessageStruct* j1939Message_t;
+typedef struct j1939MessageStruct
+{
+    uint32_t placeHolder;
+}j1939MessageStruct_t;
+
+typedef struct j1939InterfaceStruct* j1939Interface_t;
+struct j1939Struct
+{
+    j1939Interface_t iFace;
+    const char* type;
+};
+
+struct j1939InterfaceStruct
+{
+    uint8_t ( *sendJ1939Message )( j1939_t, j1939Message_t );
+};
+
+
+/******************************************************************************/
+
+
+#endif /* J1939STACKINTERFACE_H_ */
