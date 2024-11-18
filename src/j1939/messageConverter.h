@@ -1,28 +1,17 @@
 /*******************************************************************************
- * @file	CANDriverInterface.h
+ * @file	messageConverter.h
  * @brief	
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
-#ifndef CANDRIVERINTERFACE_H_
-#define CANDRIVERINTERFACE_H_
+#ifndef MESSAGECONVERTER_H_
+#define MESSAGECONVERTER_H_
 /******************************************************************************/
 #include "commonTypes.h"
-
-typedef struct canMessageStruct
-{
-    uint32_t id;
-    bool_t isExtended;
-    uint8_t dlc;
-    uint8_t* data;
-} canMessageStruct_t;
-
-typedef struct canDriverStruct
-{
-    const char* type;
-}canDriverStruct_t;
+#include "drivers/CANDriver.h"
+#include "j1939Stack.h"
 
 /******************************************************************************/
+void encodeCANMessage( canMessage_t canMessage, const j1939Message_t j1939Message );
 
-
-#endif /* CANDRIVERINTERFACE_H_ */
+#endif /* MESSAGECONVERTER_H_ */
