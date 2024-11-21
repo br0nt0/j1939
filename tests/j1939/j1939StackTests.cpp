@@ -43,3 +43,13 @@ TEST( j1939Stack, given_a_stack_description_when_accessing_the_interface_then_it
     // then
     STRCMP_EQUAL( "Test Stack", getJ1939StackType( &testStack ) );
 }
+
+TEST( j1939Stack, given_null_stack_when_destroying_the_stack_then_no_seg_fault )
+{
+    // given
+
+    // when
+    destroyJ1939Stack( NULL );
+
+    // then
+}

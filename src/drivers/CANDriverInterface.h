@@ -17,10 +17,18 @@ typedef struct canMessageStruct
     uint8_t* data;
 } canMessageStruct_t;
 
+typedef struct canDriverInterfaceStruct* canDriverInterface_t;
 typedef struct canDriverStruct
 {
+    canDriverInterface_t vTable;
     const char* type;
 }canDriverStruct_t;
+
+typedef struct canDriverInterfaceStruct
+{
+    void ( *destroy )( canDriver_t );
+    bool_t( *isOperational )( canDriver_t );
+}canDriverInterfaceStruct_t;
 
 /******************************************************************************/
 

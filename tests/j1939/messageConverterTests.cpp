@@ -12,7 +12,7 @@ extern "C"
 #include "j1939/messageConverter.h"
 }
 
-TEST_GROUP( messageConverter )
+TEST_GROUP( encodeMessage )
 {
     canMessageStruct_t canMessage;
     j1939MessageStruct_t j1939Message;
@@ -24,7 +24,7 @@ TEST_GROUP( messageConverter )
     }
 };
 
-TEST( messageConverter, given_null_inputs_to_the_converter_then_nothing_happens )
+TEST( encodeMessage, given_null_inputs_to_the_converter_then_nothing_happens )
 {
     // given
 
@@ -36,7 +36,7 @@ TEST( messageConverter, given_null_inputs_to_the_converter_then_nothing_happens 
     // then
 }
 
-TEST( messageConverter, given_a_j1939_message_with_address_bigger_than_zero_when_encoding_to_CAN_message_then_CAN_id_last_8_bits_has_the_address )
+TEST( encodeMessage, given_a_j1939_message_with_address_bigger_than_zero_when_encoding_to_CAN_message_then_CAN_id_last_8_bits_has_the_address )
 {
     // given
     j1939Message.sourceAddress = 0x01u;
@@ -49,7 +49,7 @@ TEST( messageConverter, given_a_j1939_message_with_address_bigger_than_zero_when
     UNSIGNED_LONGS_EQUAL( j1939Message.sourceAddress, sourceAddress );
 }
 
-TEST( messageConverter, given_a_j1939_message_with_priority_bigger_than_zero_when_encoding_to_CAN_message_then_CAN_id_has_it_on_bit_position_26 )
+TEST( encodeMessage, given_a_j1939_message_with_priority_bigger_than_zero_when_encoding_to_CAN_message_then_CAN_id_has_it_on_bit_position_26 )
 {
     // given
     j1939Message.priority = 0x01u;
@@ -62,7 +62,7 @@ TEST( messageConverter, given_a_j1939_message_with_priority_bigger_than_zero_whe
     UNSIGNED_LONGS_EQUAL( j1939Message.priority, priority );
 }
 
-TEST( messageConverter, given_a_j1939_message_with_protocol_format_equal_to_240_when_encoding_to_CAN_message_then_PS_field_is_group_extension )
+TEST( encodeMessage, given_a_j1939_message_with_protocol_format_equal_to_240_when_encoding_to_CAN_message_then_PS_field_is_group_extension )
 {
     // given
     j1939Message.parameterGroupNumber = 0xf000U;
@@ -76,7 +76,7 @@ TEST( messageConverter, given_a_j1939_message_with_protocol_format_equal_to_240_
     UNSIGNED_LONGS_EQUAL( j1939Message.parameterGroupNumber, pgn );
 }
 
-TEST( messageConverter, given_a_j1939_message_with_protocol_format_bigger_than_240_when_encoding_to_CAN_message_then_PS_field_is_group_extension )
+TEST( encodeMessage, given_a_j1939_message_with_protocol_format_bigger_than_240_when_encoding_to_CAN_message_then_PS_field_is_group_extension )
 {
     // given
     j1939Message.parameterGroupNumber = 0xf001U;
@@ -90,7 +90,7 @@ TEST( messageConverter, given_a_j1939_message_with_protocol_format_bigger_than_2
     UNSIGNED_LONGS_EQUAL( j1939Message.parameterGroupNumber, pgn );
 }
 
-TEST( messageConverter, given_a_j1939_message_with_protocol_format_less_than_240_when_encoding_to_CAN_message_then_CAN_id_PS_field_is_the_destination_address )
+TEST( encodeMessage, given_a_j1939_message_with_protocol_format_less_than_240_when_encoding_to_CAN_message_then_CAN_id_PS_field_is_the_destination_address )
 {
     // given
     j1939Message.parameterGroupNumber = 0xefffU;
@@ -106,7 +106,7 @@ TEST( messageConverter, given_a_j1939_message_with_protocol_format_less_than_240
     UNSIGNED_LONGS_EQUAL( expectedValue, pgn );
 }
 
-TEST( messageConverter, given_a_j1939_message_when_encoding_to_CAN_message_then_message_is_extended )
+TEST( encodeMessage, given_a_j1939_message_when_encoding_to_CAN_message_then_message_is_extended )
 {
     // given
 
@@ -117,7 +117,7 @@ TEST( messageConverter, given_a_j1939_message_when_encoding_to_CAN_message_then_
     CHECK_TRUE( canMessage.isExtended );
 }
 
-TEST( messageConverter, given_a_j1939_message_that_contains_data_less_or_equal_to_8_when_encoding_to_CAN_then_CAN_DLC_equal_to_j1939_data_size )
+TEST( encodeMessage, given_a_j1939_message_that_contains_data_less_or_equal_to_8_when_encoding_to_CAN_then_CAN_DLC_equal_to_j1939_data_size )
 {
     // given
     uint8_t data[ 7 ] = { 1,2,3,4,5,6,7 };
@@ -133,7 +133,7 @@ TEST( messageConverter, given_a_j1939_message_that_contains_data_less_or_equal_t
     MEMCMP_EQUAL( j1939Message.data, canMessage.data, j1939Message.dataSize );
 }
 
-TEST( messageConverter, given_a_j1939_message_that_contains_data_bigger_than_8_when_encoding_to_CAN_then_CAN_DLC_clamped_to_8 )
+TEST( encodeMessage, given_a_j1939_message_that_contains_data_bigger_than_8_when_encoding_to_CAN_then_CAN_DLC_clamped_to_8 )
 {
     // given
     j1939Message.dataSize = 9u;

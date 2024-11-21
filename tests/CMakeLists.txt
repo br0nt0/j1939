@@ -50,7 +50,8 @@ target_compile_definitions(${TEST_EXECUTABLE} PRIVATE
                                     ${COMMON_DEFINES})
 target_include_directories(${TEST_EXECUTABLE} PRIVATE
                                     ${CPPUTEST_INCLUDE_DIRS}
-                                    ${PRJ_INCLUDE_DIR})
+                                    ${PRJ_INCLUDE_DIR}
+                                    ${PRJ_UNIT_TEST_DIR})
 target_compile_options(${TEST_EXECUTABLE} PRIVATE
                                     ${COMMON_COMPILE_FLAGS})
 target_link_directories(${TEST_EXECUTABLE} PRIVATE

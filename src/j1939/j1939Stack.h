@@ -8,12 +8,13 @@
 #define J1939STACK_H_
 /******************************************************************************/
 
-#include "stdint.h"
+#include "commonTypes.h"
 
 typedef struct j1939Struct* j1939_t;
 typedef struct j1939MessageStruct* j1939Message_t;
 
 /******************************************************************************/
+void destroyJ1939Stack( j1939_t self );
 uint8_t sendJ1939Message( j1939_t self, const j1939Message_t message );
 const char* getJ1939StackType( j1939_t self );
 

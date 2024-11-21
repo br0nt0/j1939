@@ -22,6 +22,16 @@ TEST_GROUP( CANDriver )
     }
 };
 
+TEST( CANDriver, given_null_driver_when_destroying_CAN_driver_then_no_seg_fault )
+{
+    // given
+
+    // when
+    destroyCANDriver( NULL );
+
+    // then
+}
+
 TEST( CANDriver, given_null_driver_when_accessing_the_CAN_interface_then_no_seg_fault )
 {
     // given
@@ -45,4 +55,14 @@ TEST( CANDriver, given_a_test_CAN_driver_when_requesting_interface_type_then_it_
     
     // then
     STRCMP_EQUAL( "This is a type", getCANDriverType( &testDriver ) );
+}
+
+TEST( CANDriver, given_null_driver_when_checking_if_CAN_driver_is_operational_then_false_returned )
+{
+    // given
+
+    // when
+
+    // then
+    CHECK_FALSE( isCANDriverOperational( NULL ) );
 }

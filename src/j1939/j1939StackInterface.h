@@ -20,16 +20,17 @@ typedef struct j1939MessageStruct
 }j1939MessageStruct_t;
 
 typedef struct j1939InterfaceStruct* j1939Interface_t;
-struct j1939Struct
+typedef struct j1939Struct
 {
     j1939Interface_t iFace;
     const char* type;
-};
+}j1939Struct_t;
 
-struct j1939InterfaceStruct
+typedef struct j1939InterfaceStruct
 {
+    void ( *destroy )( j1939_t );
     uint8_t ( *sendJ1939Message )( j1939_t, j1939Message_t );
-};
+}j1939InterfaceStruct_t;
 
 
 /******************************************************************************/

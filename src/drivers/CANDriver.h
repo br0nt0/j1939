@@ -12,13 +12,16 @@
 enum
 {
     CAN_DRIVER_IS_NULL = 0u,
+    CAN_DRIVER_NOT_OPERATIONAL
 };
 
 typedef struct canDriverStruct* canDriver_t;
 typedef struct canMessageStruct* canMessage_t;
 
 /******************************************************************************/
+void destroyCANDriver( canDriver_t self );
 uint8_t sendCANMessage( canDriver_t self, canMessage_t message );
+bool_t isCANDriverOperational( canDriver_t self );
 const char* getCANDriverType( canDriver_t driver );
 
 
