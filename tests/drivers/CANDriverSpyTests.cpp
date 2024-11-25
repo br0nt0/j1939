@@ -54,3 +54,26 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_checking_if_operational_then_value
     CHECK_TRUE( isCANDriverOperational( spy ) );
 }
 
+TEST( CANDriverSpy, given_spy_CAN_driver_when_transmitting_a_message_then_the_expected_message_is_returned )
+{
+    // given
+    uint8_t data[ 8 ] = { 7u, 6u, 5u, 4u, 3u, 2u, 1u, 0u };
+    canMessageStruct_t message;
+    message.id = 0x1cfd5411u;
+    message.dlc = 8u;
+    message.isExtended = true;
+    message.data = data;
+    mock( "CANSpy" ).expectOneCall( "sendMessage" )
+        .withPointerParameter( "base", spy )
+        .withUnsignedIntParameter( "id", message.id )
+        .withBoolParameter( "isExtended", message.isExtended )
+        .withUnsignedIntParameter( "dlc", message.dlc )
+        .withPointerParameter( "data", message.data )
+        .andReturnValue( CAN_TX_SUCCEEDED );
+
+    // when
+    uint8_t result = sendCANMessage( spy, &message );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( result, CAN_TX_SUCCEEDED );
+}

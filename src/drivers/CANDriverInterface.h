@@ -28,6 +28,7 @@ typedef struct canDriverInterfaceStruct
 {
     void ( *destroy )( canDriver_t );
     bool_t( *isOperational )( canDriver_t );
+    uint8_t( *sendMessage )( canDriver_t, const canMessage_t );
 }canDriverInterfaceStruct_t;
 
 /******************************************************************************/

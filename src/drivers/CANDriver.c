@@ -18,11 +18,15 @@ void destroyCANDriver( canDriver_t self )
     }
 }
 
-uint8_t sendCANMessage( canDriver_t self, canMessage_t message )
+uint8_t sendCANMessage( canDriver_t self, const canMessage_t message )
 {
-    ( void ) self;
-    ( void ) message;
-    return 0u;
+    uint8_t result = CAN_DRIVER_IS_NULL;
+    if ( NULL != self )
+    {
+        result = self->vTable->sendMessage( self, message );
+    }
+    
+    return ( result );
 }
 
 bool_t isCANDriverOperational( canDriver_t self )

@@ -29,13 +29,25 @@ static bool_t isOperational( canDriver_t base )
     return ( mock( "CANSpy" ).actualCall( "isOperational" ).withPointerParameter( "base", base ).returnBoolValue( ) );
 }
 
+static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
+{
+    return ( static_cast< uint8_t >( mock( "CANSpy" ).actualCall( "sendMessage" )
+                                     .withPointerParameter( "base", base )
+                                     .withUnsignedIntParameter( "id", message->id )
+                                     .withBoolParameter( "isExtended", message->isExtended )
+                                     .withUnsignedIntParameter( "dlc", message->dlc )
+                                     .withPointerParameter( "data", message->data )
+                                     .returnUnsignedIntValueOrDefault( 0u ) ) );
+}
+
 /******************************************************************************/
 canDriver_t createCANDriverSpy( void )
 {
     static canDriverInterfaceStruct_t interface =
     {
         destroy,
-        isOperational
+        isOperational,
+        sendMessage
     };
 
     canDriverSpy_t spy = new canDriverSpyStruct_t;

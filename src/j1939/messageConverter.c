@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file	messageConverter.c
- * @brief	
+ * @brief
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
@@ -12,7 +12,7 @@
 /******************************************************************************/
 void encodeCANMessage( canMessage_t canMessage, const j1939Message_t j1939Message )
 {
-    if (canMessage && j1939Message)
+    if ( canMessage && j1939Message )
     {
         canMessage->id = ( uint32_t ) j1939Message->sourceAddress;
         canMessage->id |= ( uint32_t ) j1939Message->priority << 26u;
@@ -24,7 +24,7 @@ void encodeCANMessage( canMessage_t canMessage, const j1939Message_t j1939Messag
         }
         canMessage->isExtended = true;
         canMessage->dlc = ( j1939Message->dataSize > 8U ) ? 8U : ( uint8_t ) j1939Message->dataSize;
-		canMessage->data = j1939Message->data;
+        canMessage->data = j1939Message->data;
     }
-    
+
 }
