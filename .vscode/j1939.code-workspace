@@ -69,6 +69,15 @@
 		"C_Cpp.vcFormat.space.withinParameterListParentheses": true,
 		"C_Cpp.vcFormat.space.withinSquareBrackets": true,
 		"editor.autoSurround": "languageDefined",
-		"editor.formatOnType": true
+		"editor.formatOnType": true,
+		"files.associations": {
+			"j1939stack.h": "c",
+			"j1939stackinterface.h": "c",
+			"commontypes.h": "c",
+			"deque": "cpp",
+			"string": "cpp",
+			"vector": "cpp",
+			"messagesend.h": "c"
+		}
 	}
 }

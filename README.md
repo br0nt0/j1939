@@ -35,3 +35,6 @@ make -j gcovr
 make clean
 make -j j1939lib
 '''
+
+## TODO
+Restrict to only signed commits
