@@ -20,14 +20,13 @@ void destroyJ1939Stack( j1939_t self )
 
 uint8_t sendJ1939Message( j1939_t self, const j1939Message_t message )
 {
-    uint8_t result = 1u;
-    ( void ) message;
+    uint8_t status = 1u;
 
     if ( NULL != self )
     {
-
+        status = self->iFace->sendJ1939Message( self, message );
     }
-    return ( result );
+    return ( status );
 }
 
 const char* getJ1939StackType( j1939_t self )

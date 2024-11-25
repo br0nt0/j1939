@@ -8,6 +8,10 @@
 #include "CppUTestExt/MockSupport.h"
 
 #include "j1939StackFake.h"
+extern "C"
+{
+#include "j1939/messageSend.h"
+}
 /******************************************************************************/
 
 typedef struct j1939FakeStruct* j1939Fake_t;
@@ -23,15 +27,14 @@ typedef struct j1939FakeStruct
 static void destroy( j1939_t base )
 {
     j1939Fake_t fake = reinterpret_cast< j1939Fake_t > ( base );
-    destroyCANDriver( fake->driver );
     delete fake;
 }
 
 static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
 {
-    ( void ) base;
-    ( void ) message;
-    return 0;
+    j1939Fake_t fake = reinterpret_cast< j1939Fake_t > ( base );
+    uint8_t status = sendJ1939MessageToCANDriver( message, fake->driver );
+    return ( status );
 }
 
 /******************************************************************************/
