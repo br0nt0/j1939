@@ -22,8 +22,10 @@ typedef struct canMessageStruct* canMessage_t;
 /******************************************************************************/
 void destroyCANDriver( canDriver_t self );
 uint8_t sendCANMessage( canDriver_t self, const canMessage_t message );
+canMessage_t receiveCANMessage( canDriver_t self );
 bool_t isCANDriverOperational( canDriver_t self );
 const char* getCANDriverType( canDriver_t driver );
+
 
 
 #include "CANDriverInterface.h"

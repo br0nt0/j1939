@@ -144,3 +144,60 @@ TEST( encodeMessage, given_a_j1939_message_that_contains_data_bigger_than_8_when
     // then
     UNSIGNED_LONGS_EQUAL( 8u, canMessage.dlc );
 }
+
+
+TEST_GROUP( decodeMessage )
+{
+    canMessageStruct_t canMessage;
+    j1939MessageStruct_t j1939Message;
+    void setup( void )
+    {
+        canMessage.isExtended = true;
+    }
+    void teardown( void )
+    {
+    }
+};
+
+TEST( decodeMessage, given_null_inputs_to_the_converter_then_nothing_happens )
+{
+    // given
+
+    // when
+    decodeMessage( NULL, NULL );
+    decodeMessage( &j1939Message, NULL );
+    decodeMessage( NULL, &canMessage );
+
+    // then
+}
+
+TEST( decodeMessage, given_a_non_extended_CAN_message_when_decoding_to_J1939_then_j1939_message_defaults_to_zero )
+{
+    // given
+    canMessage.isExtended = false;
+
+    // when
+    decodeMessage( &j1939Message, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 0u, j1939Message.parameterGroupNumber );
+    UNSIGNED_LONGS_EQUAL( 0u, j1939Message.priority );
+    UNSIGNED_LONGS_EQUAL( 0u, j1939Message.sourceAddress );
+    UNSIGNED_LONGS_EQUAL( 0u, j1939Message.destinationAddress );
+    UNSIGNED_LONGS_EQUAL( 0u, j1939Message.dataSize );
+    CHECK_TRUE( NULL == j1939Message.data );
+}
+
+TEST( decodeMessage, given_CAN_message_with_the_protocol_format_less_than_240_when_decoding_to_J1939_then_j1939_message_destination_address_is_PS_field )
+{
+    // given
+    canMessage.id = 0x14efaa77U;
+
+    // when
+    decodeMessage( &j1939Message, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 0xaau, j1939Message.destinationAddress );
+}
+
+

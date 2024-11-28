@@ -28,3 +28,28 @@ void encodeCANMessage( canMessage_t canMessage, const j1939Message_t j1939Messag
     }
 
 }
+
+void decodeMessage( j1939Message_t j1939Message, const canMessage_t canMessage )
+{
+    if ( j1939Message && canMessage )
+    {
+        if ( canMessage->isExtended )
+        {
+            if ( ( ( canMessage->id >> 16u ) & 0xffu ) < 0xf0u )
+            {
+                j1939Message->destinationAddress = ( uint8_t ) ( ( canMessage->id >> 8u ) & 0xffu );
+            }
+
+        }
+        else
+        {
+            j1939Message->parameterGroupNumber = 0u;
+            j1939Message->priority = 0u;
+            j1939Message->sourceAddress = 0u;
+            j1939Message->destinationAddress = 0u;
+            j1939Message->dataSize = 0u;
+            j1939Message->data = NULL;
+        }
+    }
+}
+
