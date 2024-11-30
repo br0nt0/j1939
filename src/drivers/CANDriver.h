@@ -9,12 +9,15 @@
 /******************************************************************************/
 #include "commonTypes.h"
 
+#define CAN_GLOBAL_ADDRESS ( 255u )
+
 enum
 {
     CAN_DRIVER_IS_NULL = 0u,
     CAN_DRIVER_NOT_OPERATIONAL,
     CAN_TX_SUCCEEDED
 };
+
 
 typedef struct canDriverStruct* canDriver_t;
 typedef struct canMessageStruct* canMessage_t;
