@@ -32,7 +32,7 @@ TEST( CANDriver, given_null_driver_when_destroying_CAN_driver_then_no_seg_fault 
     // then
 }
 
-TEST( CANDriver, given_null_driver_when_accessing_the_CAN_interface_then_no_seg_fault )
+TEST( CANDriver, given_null_driver_when_sending_a_messge_then_no_seg_fault )
 {
     // given
     canMessageStruct_t message;
@@ -65,4 +65,15 @@ TEST( CANDriver, given_null_driver_when_checking_if_CAN_driver_is_operational_th
 
     // then
     CHECK_FALSE( isCANDriverOperational( NULL ) );
+}
+
+TEST( CANDriver, given_null_driver_when_receiving_a_message_then_no_seg_fault )
+{
+    // given
+
+    // when
+    canMessage_t message = receiveCANMessage( NULL );
+
+    // then
+    CHECK_TRUE( NULL == message );
 }

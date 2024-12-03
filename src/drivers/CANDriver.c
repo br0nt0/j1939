@@ -29,6 +29,17 @@ uint8_t sendCANMessage( canDriver_t self, const canMessage_t message )
     return ( result );
 }
 
+canMessage_t receiveCANMessage( canDriver_t self )
+{
+    canMessage_t message = NULL;
+    if ( NULL != self )
+    {
+        message = self->vTable->receiveMessage( self );
+    }
+    
+    return ( message );
+}
+
 bool_t isCANDriverOperational( canDriver_t self )
 {
     bool_t isOperational = false;

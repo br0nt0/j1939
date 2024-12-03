@@ -9,6 +9,8 @@
 /******************************************************************************/
 #include "commonTypes.h"
 
+#define CAN_GLOBAL_ADDRESS ( 255u )
+
 enum
 {
     CAN_DRIVER_IS_NULL = 0u,
@@ -16,14 +18,17 @@ enum
     CAN_TX_SUCCEEDED
 };
 
+
 typedef struct canDriverStruct* canDriver_t;
 typedef struct canMessageStruct* canMessage_t;
 
 /******************************************************************************/
 void destroyCANDriver( canDriver_t self );
 uint8_t sendCANMessage( canDriver_t self, const canMessage_t message );
+canMessage_t receiveCANMessage( canDriver_t self );
 bool_t isCANDriverOperational( canDriver_t self );
 const char* getCANDriverType( canDriver_t driver );
+
 
 
 #include "CANDriverInterface.h"

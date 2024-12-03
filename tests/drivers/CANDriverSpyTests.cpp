@@ -77,3 +77,39 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_transmitting_a_message_then_the_ex
     // then
     UNSIGNED_LONGS_EQUAL( result, CAN_TX_SUCCEEDED );
 }
+
+TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_one_message_then_the_expected_message_is_returned )
+{
+    // given
+    canMessageStruct_t expectedMessage;
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" )
+        .withPointerParameter( "base", spy )
+        .andReturnValue( &expectedMessage );
+
+    // when
+    canMessage_t actualMessage = receiveCANMessage( spy );
+
+    // then
+    POINTERS_EQUAL( &expectedMessage, actualMessage );
+}
+
+TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_many_messages_then_the_expected_messages_are_returned )
+{
+    // given
+    canMessageStruct_t expectedMessage1;
+    canMessageStruct_t expectedMessage2;
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" )
+        .withPointerParameter( "base", spy )
+        .andReturnValue( &expectedMessage1 );
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" )
+        .withPointerParameter( "base", spy )
+        .andReturnValue( &expectedMessage2 );
+    
+    // when
+    canMessage_t actualMessage1 = receiveCANMessage( spy );
+    canMessage_t actualMessage2 = receiveCANMessage( spy );
+
+    // then
+    POINTERS_EQUAL( &expectedMessage1, actualMessage1 );
+    POINTERS_EQUAL( &expectedMessage2, actualMessage2 );
+}

@@ -76,3 +76,4 @@ TEST( j1939StackFake, given_fake_j1939_stack_when_sending_a_message_then_CAN_dri
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
 }
+
