@@ -16,6 +16,7 @@ typedef struct j1939MessageStruct* j1939Message_t;
 /******************************************************************************/
 void destroyJ1939Stack( j1939_t self );
 uint8_t sendJ1939Message( j1939_t self, const j1939Message_t message );
+j1939Message_t receiveJ1939Message( j1939_t self );
 const char* getJ1939StackType( j1939_t self );
 
 #include "j1939StackInterface.h"

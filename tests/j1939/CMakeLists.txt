@@ -3,5 +3,5 @@ target_sources(${TEST_EXECUTABLE} PRIVATE
                                 ${PRJ_UNIT_TEST_DIR}/j1939/j1939StackTests.cpp
                                 ${PRJ_UNIT_TEST_DIR}/j1939/messageConverterTests.cpp
                                 ${PRJ_UNIT_TEST_DIR}/j1939/messageSendTests.cpp
-                                ${PRJ_UNIT_TEST_DIR}/j1939/j1939StackFake.cpp
-                                ${PRJ_UNIT_TEST_DIR}/j1939/j1939StackFakeTests.cpp)
+                                ${PRJ_UNIT_TEST_DIR}/j1939/j1939StackInstanceTests.cpp
+                                ${PRJ_UNIT_TEST_DIR}/j1939/messageReceiveTests.cpp)

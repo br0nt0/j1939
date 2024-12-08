@@ -40,6 +40,12 @@ static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
                                      .returnUnsignedIntValueOrDefault( 0u ) ) );
 }
 
+static canMessage_t receiveMessage( canDriver_t base )
+{
+    return ( static_cast< canMessage_t >( mock( "CANSpy" ).actualCall( "receiveMessage" )
+                                                .withPointerParameter( "base", base )
+                                                .returnPointerValue( ) ) );
+}
 /******************************************************************************/
 canDriver_t createCANDriverSpy( void )
 {
@@ -47,7 +53,8 @@ canDriver_t createCANDriverSpy( void )
     {
         destroy,
         isOperational,
-        sendMessage
+        sendMessage,
+        receiveMessage,
     };
 
     canDriverSpy_t spy = new canDriverSpyStruct_t;

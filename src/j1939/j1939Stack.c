@@ -33,3 +33,13 @@ const char* getJ1939StackType( j1939_t self )
 {
     return ( self->type );
 }
+
+j1939Message_t receiveJ1939Message( j1939_t self )
+{
+    j1939Message_t message = NULL;
+    if ( NULL != self )
+    {
+        message = self->iFace->receiveJ1939Message( self );
+    }
+    return ( message );
+}

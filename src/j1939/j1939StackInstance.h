@@ -1,19 +1,18 @@
 /*******************************************************************************
- * @file	j1939StackFake.h
+ * @file	j1939StackInstance.h
  * @brief	
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
-#ifndef J1939STACKFAKE_H_
-#define J1939STACKFAKE_H_
+#ifndef J1939STACKINSTANCE_H_
+#define J1939STACKINSTANCE_H_
 /******************************************************************************/
-extern "C"
-{
 #include "j1939/j1939Stack.h"
 #include "drivers/CANDriver.h"
-}
 
 /******************************************************************************/
-j1939_t createJ1939FakeStack( canDriver_t driver );
+j1939_t createJ1939StackInstance( canDriver_t driver );
 
-#endif /* J1939STACKFAKE_H_ */
+
+
+#endif /* J1939STACKINSTANCE_H_ */
