@@ -53,3 +53,14 @@ TEST( j1939Stack, given_null_stack_when_destroying_the_stack_then_no_seg_fault )
 
     // then
 }
+
+TEST( j1939Stack, given_null_stack_when_receiving_a_j1939_message_then_no_seg_fault )
+{
+    // given
+
+    // when
+    j1939Message_t message = receiveJ1939Message( NULL );
+
+    // then
+    CHECK_TRUE( NULL == message );
+}

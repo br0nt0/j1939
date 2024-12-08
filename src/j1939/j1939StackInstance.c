@@ -6,6 +6,7 @@
  ******************************************************************************/
 #include "j1939StackInstance.h"
 #include "j1939/messageSend.h"
+#include "j1939/messageReceive.h"
 
 /******************************************************************************/
 typedef struct j1939StackInstanceStruct* j1939StackInstance_t;
@@ -30,13 +31,23 @@ static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
     return ( status );
 }
 
+static j1939Message_t receiveMessage( j1939_t base )
+{
+    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+
+    j1939Message_t message = receiveJ1939MessageFromCANDriver( stack->driver);
+
+    return ( message );
+}
+
 /******************************************************************************/
 j1939_t createJ1939StackInstance( canDriver_t driver )
 {
     static j1939InterfaceStruct_t interface =
     {
         destroy,
-        sendMessage
+        sendMessage,
+        receiveMessage
     };
     static j1939StackInstanceStruct_t stackMemory;
 

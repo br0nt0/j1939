@@ -29,7 +29,8 @@ typedef struct j1939Struct
 typedef struct j1939InterfaceStruct
 {
     void ( *destroy )( j1939_t );
-    uint8_t ( *sendJ1939Message )( j1939_t, j1939Message_t );
+    uint8_t( *sendJ1939Message )( j1939_t, j1939Message_t );
+    j1939Message_t( *receiveJ1939Message )( j1939_t );
 }j1939InterfaceStruct_t;
 
 

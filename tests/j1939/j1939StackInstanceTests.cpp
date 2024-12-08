@@ -57,7 +57,7 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_then_it_can_be_created_an
 TEST( j1939StackInstance, given_a_j1939_stack_instance_when_sending_a_message_then_CAN_driver_picks_it_up )
 {
     // given
-    uint8_t data[ 8 ] = { 11u, 22u, 33u, 44u, 55u, 66u, 77u,88u };
+    uint8_t data[ 8 ] = { 11u, 22u, 33u, 44u, 55u, 66u, 77u, 88u };
     j1939MessageStruct_t testMessage;
     testMessage.parameterGroupNumber = 0xfe44u;
     testMessage.priority = 7u;
@@ -75,5 +75,31 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_when_sending_a_message_th
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_receiving_a_message_from_CAN_driver_then_j1939_stack_picks_it_up )
+{
+    // given
+    uint8_t data[ 8 ] = { 11u, 22u, 44u, 33u, 55u, 22u, 77u, 88u };
+    canMessageStruct_t canMessage;
+    canMessage.id = 0x14fc8cbbu;
+    canMessage.isExtended = true;
+    canMessage.dlc = 8u;
+    canMessage.data = data;
+
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" )
+        .withPointerParameter( "base", spyCAN )
+        .andReturnValue( &canMessage );
+    
+    // when
+    j1939Message_t message = receiveJ1939Message( stack  );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 0xfc8cu, message->parameterGroupNumber );
+    UNSIGNED_LONGS_EQUAL( 5u, message->priority );
+    UNSIGNED_LONGS_EQUAL( 0xffu, message->destinationAddress );
+    UNSIGNED_LONGS_EQUAL( 0xbbu, message->sourceAddress );
+    UNSIGNED_LONGS_EQUAL( 8u, message->dataSize );
+    MEMCMP_EQUAL( data, message->data, message->dataSize );
 }
 
