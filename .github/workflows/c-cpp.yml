@@ -13,7 +13,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: make clean
+    - name: Clean Project
       run: make -j clean
-    - name: make utest
+    - name: Run Tests
       run: make -j utest
+    - name: Generate Test Coverage
+      run: make -j gcovr
