@@ -1,5 +1,5 @@
 /*******************************************************************************
- * @file	j1939StackFakeTests.cpp
+ * @file	j1939StackInstanceTests.cpp
  * @brief	
  * @author	@br0nt0
  * @date	2024
@@ -7,36 +7,36 @@
 #include "CppUTest/TestHarness.h"
 #include "CppUTestExt/MockSupport.h"
 
+#include "drivers/CANDriverSpy.h"
+
 extern "C"
 {
+#include "j1939/j1939StackInstance.h"
 }
 
-#include "drivers/CANDriverSpy.h"
-#include "j1939StackFake.h"
-
-TEST_GROUP( j1939StackFake )
+TEST_GROUP( j1939StackInstance )
 {
-    j1939_t fakeStack;
-    canDriver_t spyCANDriver;
+    j1939_t stack;
+    canDriver_t spyCAN;
     void setup( void )
     {
-        spyCANDriver = createCANDriverSpy( );
-        fakeStack = createJ1939FakeStack( spyCANDriver );
+        spyCAN = createCANDriverSpy( );
+        stack = createJ1939StackInstance( spyCAN );
     }
     void teardown( void )
     {
-        destroyJ1939Stack( fakeStack );
-        destroyCANDriver( spyCANDriver );
+        destroyJ1939Stack( stack );
+        destroyCANDriver( spyCAN );
         mock( "CANSpy" ).checkExpectations( );
 		mock( ).clear( );
     }
     void expectCANMessgeToSucceed( uint32_t id, bool_t isExtended, uint8_t dlc, uint8_t* data )
     {
         mock( "CANSpy" ).expectOneCall( "isOperational" )
-            .withPointerParameter( "base", spyCANDriver )
+            .withPointerParameter( "base", spyCAN )
             .andReturnValue( true );
         mock( "CANSpy" ).expectOneCall( "sendMessage" )
-            .withPointerParameter( "base", spyCANDriver )
+            .withPointerParameter( "base", spyCAN )
             .withUnsignedIntParameter( "id", id )
             .withBoolParameter( "isExtended", isExtended )
             .withUnsignedIntParameter( "dlc", dlc )
@@ -45,7 +45,7 @@ TEST_GROUP( j1939StackFake )
     }
 };
 
-TEST( j1939StackFake, given_fake_j1939_stack_then_create_and_destroy )
+TEST( j1939StackInstance, given_a_j1939_stack_instance_then_it_can_be_created_and_destroyed )
 {
     // given
 
@@ -54,7 +54,7 @@ TEST( j1939StackFake, given_fake_j1939_stack_then_create_and_destroy )
     // then
 }
 
-TEST( j1939StackFake, given_fake_j1939_stack_when_sending_a_message_then_CAN_driver_picks_it_up )
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_sending_a_message_then_CAN_driver_picks_it_up )
 {
     // given
     uint8_t data[ 8 ] = { 11u, 22u, 33u, 44u, 55u, 66u, 77u,88u };
@@ -71,7 +71,7 @@ TEST( j1939StackFake, given_fake_j1939_stack_when_sending_a_message_then_CAN_dri
                                 8u,
                                 testMessage.data);
     // when
-    uint8_t status = sendJ1939Message( fakeStack, &testMessage );
+    uint8_t status = sendJ1939Message( stack, &testMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
