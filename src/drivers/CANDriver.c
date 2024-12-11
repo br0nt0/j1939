@@ -50,6 +50,16 @@ bool_t isCANDriverOperational( canDriver_t self )
     return ( isOperational );
 }
 
+bool_t isCANTxBusOffState( canDriver_t self )
+{
+    bool_t isBussOff = false;
+    if ( NULL != self )
+    {
+        isBussOff = self->vTable->isTxBussOffState( self );
+    }
+    return ( isBussOff );
+}
+
 const char* getCANDriverType( canDriver_t driver )
 {
     return ( driver->type );
