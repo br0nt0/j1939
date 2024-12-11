@@ -84,7 +84,8 @@
 			"j1939stackinstance.h": "c",
 			"stddef.h": "c",
 			"stdbool.h": "c",
-			"string.h": "c"
+			"string.h": "c",
+			"controllerapplicationname.h": "c"
 		}
 	}
 }
