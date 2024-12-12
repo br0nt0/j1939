@@ -16,7 +16,8 @@ enum
     UNDEFINED = -1,
     INIT = 0,
     WAIT_FOR_CONTENTION,
-    NORMAL_TRAFFIC
+    NORMAL_TRAFFIC,
+    DELAY_BEFORE_RECLAIM
 };
 
 enum
@@ -36,5 +37,8 @@ typedef struct
 void configureAddressClaimed( aclConfigStruct_t* configuration );
 void updateAddressClaimed( void );
 bool_t wasAddressClaimedSuccessfuly( void );
+void registerRequestForAddressClaim( void );
+void registerReceivedMessageWithOwnSA( void );
+void registerReceivedContention( const uint8_t* caName );
 
 #endif /* ADDRESSCLAIMED_H_ */
