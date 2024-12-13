@@ -8,8 +8,14 @@
 #include "messageSend.h"
 
 /******************************************************************************/
+enum
+{
+    NULL_ADDRESS = 254u,
+    ACL_PGN = 60928u
+};
 static struct addressClaimed
 {
+    j1939_t stack;
     canDriver_t driver;
     bool_t wasAddressClaimed;
     bool_t wasRequestForACLReceived;
@@ -17,7 +23,7 @@ static struct addressClaimed
     bool_t wasContentionReceived;
     uint8_t* caName;
     uint8_t tickMs;
-    uint8_t sourceAddress;
+    uint8_t newSourceAddress;
     uint8_t contentionCounterMs;
     uint8_t pseudoDelay;
     int8_t state;
@@ -29,9 +35,9 @@ static uint8_t sendACLMessage( void )
 {
     uint8_t status;
 	j1939Message_t message = ( j1939Message_t ) malloc( sizeof( j1939MessageStruct_t ) );
-	message->parameterGroupNumber = 60928u;
-	message->sourceAddress = acl.sourceAddress;
-	message->destinationAddress = GLOBAL_ADDRESS;
+	message->parameterGroupNumber = ACL_PGN;
+    message->sourceAddress = getJ1939SourceAddress( acl.stack );
+    message->destinationAddress = GLOBAL_ADDRESS;
 	message->priority = 6u;
 	message->data = acl.caName;
 	message->dataSize = 8u;
@@ -54,6 +60,23 @@ static uint8_t generateNewDelay( const uint8_t* name, uint8_t tickMs )
     return ( ( uint8_t ) result );
 }
 
+static bool_t doesContenderHaveHigherPriority( void )
+{
+    uint8_t i;
+    for ( i = 7u; ( ( acl.caName[ i ] == acl.contenderName[ i ] ) && ( i > 0u ) ); --i ) { }
+    return ( acl.contenderName[ i ] <= acl.caName[ i ] );
+}
+
+static uint8_t getNewSourceAddress( void )
+{
+	acl.newSourceAddress++;
+	if ( acl.newSourceAddress > 247u )
+	{
+		acl.newSourceAddress = NULL_ADDRESS;
+	}
+	return ( acl.newSourceAddress );
+}
+
 static void handleWaitForContention( void )
 {
     if ( isCANTxBusOffState( acl.driver ) )
@@ -65,6 +88,11 @@ static void handleWaitForContention( void )
     else if ( acl.wasContentionReceived )
     {
         acl.contentionCounterMs = acl.tickMs;
+        if ( doesContenderHaveHigherPriority( ) )
+        {
+            uint8_t sourceAddress = getNewSourceAddress( );
+		    setJ1939SourceAddress( acl.stack, sourceAddress );
+        }
         if ( sendACLMessage( ) == CAN_TX_SUCCEEDED )
         {
             acl.wasContentionReceived = false;
@@ -116,9 +144,9 @@ void configureAddressClaimed( j1939_t stack, int8_t state )
 {    
     if ( NULL != stack )
     {
+        acl.stack = stack;
         acl.driver = getJ1939ConfiguredCANDriver( stack );
         acl.caName = getJ1939CAName( stack );
-        acl.sourceAddress = getJ1939SourceAddress( stack );
         acl.tickMs = getJ1939ConfiguredTickMs( stack );
         acl.state = state;
     }
@@ -132,6 +160,7 @@ void configureAddressClaimed( j1939_t stack, int8_t state )
     acl.wasMessageWithOwnSAReceived = false;
     acl.pseudoDelay = 0u;
     acl.wasContentionReceived = false;
+    acl.newSourceAddress = 127u;
 }
 
 

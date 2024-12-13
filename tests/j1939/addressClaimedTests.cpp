@@ -35,6 +35,12 @@ TEST_GROUP( addressClaimed )
         mock( "CANSpy" ).checkExpectations( );
         mock( ).clear( );
     }
+    void expectCANOperational( void )
+    {
+         mock( "CANSpy" ).expectOneCall( "isOperational" )
+                .withPointerParameter( "base", spyCanDriver )
+                .andReturnValue( true );
+    }
     void expectNoCallToSendMessage( void )
     {
         mock( "CANSpy" ).expectNoCall( "isOperational" );
@@ -47,9 +53,7 @@ TEST_GROUP( addressClaimed )
         expectedCANMessage.isExtended = true;
         expectedCANMessage.dlc = 8u;
         expectedCANMessage.data = getJ1939CAName( testStack );
-        mock( "CANSpy" ).expectOneCall( "isOperational" )
-            .withPointerParameter( "base", spyCanDriver )
-            .andReturnValue( true );
+        expectCANOperational( );
         mock( "CANSpy" ).expectOneCall( "sendMessage" )
             .withPointerParameter( "base", spyCanDriver )
             .withUnsignedIntParameter( "id", expectedCANMessage.id )
@@ -65,9 +69,7 @@ TEST_GROUP( addressClaimed )
         expectedCANMessage.isExtended = true;
         expectedCANMessage.dlc = 8u;
         expectedCANMessage.data = getJ1939CAName( testStack );
-        mock( "CANSpy" ).expectOneCall( "isOperational" )
-            .withPointerParameter( "base", spyCanDriver )
-            .andReturnValue( true );
+        expectCANOperational( );
         mock( "CANSpy" ).expectOneCall( "sendMessage" )
             .withPointerParameter( "base", spyCanDriver )
             .withUnsignedIntParameter( "id", expectedCANMessage.id )
@@ -81,11 +83,6 @@ TEST_GROUP( addressClaimed )
         mock( "CANSpy" ).expectNCalls( n, "isTxBusOffState" )
             .withPointerParameter( "base", spyCanDriver )
             .andReturnValue( false );
-    }
-    void expectNoAddressClaimMessgeToBeSent( void )
-    {
-        mock( "CANSpy" ).expectNoCall( "isOperational" );
-        mock( "CANSpy" ).expectNoCall( "sendMessage" );
     }
     uint16_t createPseudoDelay( uint8_t * name, uint8_t ticksMs )
     {
@@ -217,7 +214,7 @@ TEST( addressClaimed, given_a_contending_message_with_name_bigger_than_mine_when
     // then
 }
 
-IGNORE_TEST( addressClaimed, given_a_contending_message_with_name_equal_to_mine_when_in_wait_for_contention_state_then_address_changed_to_128 )
+TEST( addressClaimed, given_a_contending_message_with_name_equal_to_mine_when_in_wait_for_contention_state_then_address_changed_to_128 )
 {
     // given
     uint8_t contenderName[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
@@ -225,12 +222,56 @@ IGNORE_TEST( addressClaimed, given_a_contending_message_with_name_equal_to_mine_
 
     expectNoBusOff( 1u );
     registerReceivedContention( contenderName );
-    expectOneCallToSendMessageWithAddressClaim( );
+    mock( "CANSpy" ).expectOneCall( "isOperational" )
+        .withPointerParameter( "base", spyCanDriver )
+        .andReturnValue( true );
+    mock( "CANSpy" ).expectOneCall( "sendMessage" )
+        .withPointerParameter( "base", spyCanDriver )
+        .withUnsignedIntParameter( "id", 0x18eeff80u)
+        .withBoolParameter( "isExtended", true )
+        .withUnsignedIntParameter( "dlc", 8u )
+        .withPointerParameter( "data", getJ1939CAName( testStack ) )
+        .andReturnValue( CAN_TX_BUFFER_FULL );
 
     // when
     updateAddressClaimed( );
 
     // then
+    UNSIGNED_LONGS_EQUAL( 128u, getJ1939SourceAddress( testStack ) );
+}
+
+TEST( addressClaimed, given_contention_and_no_available_address_when_prioritizing_contention_then_ )
+{
+    // given
+    uint8_t contenderName[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
+    configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
+
+    // when
+    for ( uint8_t i = 0u; i < 120u; i++ )
+    {
+        expectNoBusOff( 1u );
+        registerReceivedContention( contenderName );
+        expectCANOperational( );
+        mock( "CANSpy" ).expectOneCall( "sendMessage" )
+            .withPointerParameter( "base", spyCanDriver )
+            .withUnsignedIntParameter( "id", 0x18eeff00u + ( 128u + i ) )
+            .andReturnValue( CAN_TX_BUFFER_FULL )
+            .ignoreOtherParameters( );
+        updateAddressClaimed( );
+    }
+
+    expectNoBusOff( 1u );
+    registerReceivedContention( contenderName );
+    expectCANOperational( );
+        mock( "CANSpy" ).expectOneCall( "sendMessage" )
+            .withPointerParameter( "base", spyCanDriver )
+            .withUnsignedIntParameter( "id", 0x18eefffeu ) // cannot claim
+            .andReturnValue( CAN_TX_BUFFER_FULL )
+            .ignoreOtherParameters( );
+    updateAddressClaimed( );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 254u, getJ1939SourceAddress( testStack ) );
 }
 
 TEST( addressClaimed, given_a_request_for_address_claim_when_in_normal_traffic_state_then_address_claim_message_is_sent )
@@ -283,7 +324,7 @@ TEST( addressClaimed, given_no_contention_or_claim_or_message_with_own_SA_when_i
     // given
     configureAddressClaimed( testStack, NORMAL_TRAFFIC );
 
-    expectNoAddressClaimMessgeToBeSent( );
+    expectNoCallToSendMessage( );
 
     // when
     updateAddressClaimed( );

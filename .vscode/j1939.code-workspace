@@ -87,7 +87,9 @@
 			"string.h": "c",
 			"controllerapplicationname.h": "c",
 			"addressclaimed.h": "c",
-			"candriver.h": "c"
+			"candriver.h": "c",
+			"array": "cpp",
+			"string_view": "cpp"
 		}
 	}
 }
