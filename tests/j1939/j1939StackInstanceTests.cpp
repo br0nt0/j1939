@@ -21,7 +21,7 @@ TEST_GROUP( j1939StackInstance )
     void setup( void )
     {
         spyCAN = createCANDriverSpy( );
-        stack = createJ1939StackInstance( spyCAN );
+        stack = createJ1939StackInstance( spyCAN, 10u );
     }
     void teardown( void )
     {
@@ -52,6 +52,28 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_then_it_can_be_created_an
     // when
 
     // then
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_with_a_NULL_dirver_then_stack_is_null )
+{
+    // given
+
+    // when
+    j1939_t testStack = createJ1939StackInstance( NULL, 1u );
+
+    // then
+    CHECK_TRUE( NULL == testStack );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_with_a_zero_tick_then_stack_is_null )
+{
+    // given
+
+    // when
+    j1939_t testStack = createJ1939StackInstance( spyCAN, 0u );
+
+    // then
+    CHECK_TRUE( NULL == testStack );
 }
 
 TEST( j1939StackInstance, given_a_j1939_stack_instance_when_sending_a_message_then_CAN_driver_picks_it_up )
@@ -101,5 +123,63 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_when_receiving_a_message_
     UNSIGNED_LONGS_EQUAL( 0xbbu, message->sourceAddress );
     UNSIGNED_LONGS_EQUAL( 8u, message->dataSize );
     MEMCMP_EQUAL( data, message->data, message->dataSize );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_setting_the_source_address_then_source_address_is_returned_through_the_interface )
+{
+    // given
+    
+    // when
+    setJ1939SourceAddress( stack, 0x32u );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 0x32u, getJ1939SourceAddress( stack ) );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_setting_the_CA_name_then_CA_name_is_returned_through_the_interface )
+{
+    // given
+    uint8_t expectedCAName[ 8 ] = { 0x11u, 0x22u, 0x33u, 0x44u, 0x55u, 0x66u, 0x77u, 0x88u };
+
+    // when
+    setJ1939CAName( stack, expectedCAName );
+    uint8_t* caName = getJ1939CAName( stack );
+
+    // then
+    MEMCMP_EQUAL( expectedCAName, caName, sizeof( expectedCAName ) );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_setting_the_CA_name_to_NULL_then_returned_CA_name_is_NULL )
+{
+    // given
+
+    // when
+    setJ1939CAName( stack, NULL );
+    uint8_t* caName = getJ1939CAName( stack );
+
+    // then
+    CHECK_TRUE( NULL == caName );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_getting_configured_CAN_driver_then_it_is_returned_through_the_interface )
+{
+    // given
+
+    // when
+    canDriver_t canDriver = getJ1939ConfiguredCANDriver( stack );
+
+    // then
+    POINTERS_EQUAL( spyCAN, canDriver );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_getting_configured_stack_tick_in_ms_then_it_is_returned_through_the_interface )
+{
+    // given
+
+    // when
+    uint8_t tickMs = getJ1939ConfiguredTickMs( stack );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 10u, tickMs );
 }
 

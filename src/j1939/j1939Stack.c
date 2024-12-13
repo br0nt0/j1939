@@ -43,3 +43,61 @@ j1939Message_t receiveJ1939Message( j1939_t self )
     }
     return ( message );
 }
+
+uint8_t getJ1939SourceAddress( j1939_t self )
+{
+    uint8_t address = 0xffu;
+    if ( NULL != self )
+    {
+        address = self->iFace->getSourceAddress( self );
+    }
+    return ( address );
+}
+
+void setJ1939SourceAddress( j1939_t self, uint8_t address )
+{
+    if ( NULL != self )
+    {
+        self->iFace->setSourceAddress( self, address );
+    }
+}
+
+uint8_t* getJ1939CAName( j1939_t self )
+{
+    uint8_t* caName = NULL;
+    if ( NULL != self )
+    {
+        caName = self->iFace->getCAName( self );
+    }    
+    return ( caName );
+}
+
+void setJ1939CAName( j1939_t self, const uint8_t* caName )
+{
+    if ( NULL != self )
+    {
+        self->iFace->setCAName( self, caName );
+    }
+}
+
+canDriver_t getJ1939ConfiguredCANDriver( j1939_t self )
+{
+    canDriver_t driver = NULL;
+    if ( NULL != self )
+    {
+        driver = self->iFace->getConfiguredCANDriver( self );
+    }
+    return ( driver );
+}
+
+uint8_t getJ1939ConfiguredTickMs( j1939_t self )
+{
+    uint8_t tickMs = 0u;
+    if ( NULL != self )
+    {
+        tickMs = self->iFace->getTickMs( self );
+    }
+    return ( tickMs );
+}
+
+

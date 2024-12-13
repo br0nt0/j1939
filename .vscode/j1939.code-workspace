@@ -86,7 +86,8 @@
 			"stdbool.h": "c",
 			"string.h": "c",
 			"controllerapplicationname.h": "c",
-			"addressclaimed.h": "c"
+			"addressclaimed.h": "c",
+			"candriver.h": "c"
 		}
 	}
 }

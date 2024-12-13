@@ -8,7 +8,7 @@
 #define ADDRESSCLAIMED_H_
 /******************************************************************************/
 #include "commonTypes.h"
-#include "drivers/CANDriver.h"
+#include "j1939Stack.h"
 
 /******************************************************************************/
 enum
@@ -25,16 +25,10 @@ enum
     CONTENTION_TIMEOUT_MS = 250u
 };
 
-typedef struct
-{
-    canDriver_t driver;
-    uint8_t* caName;
-    uint8_t tickMs;
-    uint8_t sourceAddress;
-    int8_t initialState;
-}aclConfigStruct_t;
+typedef struct aclConfigStruct* aclConfig_t;
 
-void configureAddressClaimed( aclConfigStruct_t* configuration );
+
+void configureAddressClaimed( j1939_t stack, int8_t state );
 void updateAddressClaimed( void );
 bool_t wasAddressClaimedSuccessfuly( void );
 void registerRequestForAddressClaim( void );

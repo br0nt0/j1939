@@ -6,16 +6,18 @@
  ******************************************************************************/
 #include "addressClaimed.h"
 #include "messageSend.h"
-#include "stdlib.h"
 
 /******************************************************************************/
 static struct addressClaimed
 {
-    aclConfigStruct_t* config;
+    canDriver_t driver;
     bool_t wasAddressClaimed;
     bool_t wasRequestForACLReceived;
     bool_t wasMessageWithOwnSAReceived;
     bool_t wasContentionReceived;
+    uint8_t* caName;
+    uint8_t tickMs;
+    uint8_t sourceAddress;
     uint8_t contentionCounterMs;
     uint8_t pseudoDelay;
     int8_t state;
@@ -23,53 +25,46 @@ static struct addressClaimed
 }acl;
 
 /******************************************************************************/
-static bool_t isConfigValid( aclConfigStruct_t* config )
-{
-    return ( ( config->caName != NULL )
-            && ( config->driver != NULL )
-            && ( config->tickMs > 0u ) );
-}
-
 static uint8_t sendACLMessage( void )
 {
     uint8_t status;
 	j1939Message_t message = ( j1939Message_t ) malloc( sizeof( j1939MessageStruct_t ) );
 	message->parameterGroupNumber = 60928u;
-	message->sourceAddress = acl.config->sourceAddress;
+	message->sourceAddress = acl.sourceAddress;
 	message->destinationAddress = GLOBAL_ADDRESS;
 	message->priority = 6u;
-	message->data = acl.config->caName;
+	message->data = acl.caName;
 	message->dataSize = 8u;
-	status = sendJ1939MessageToCANDriver( message, acl.config->driver );
+	status = sendJ1939MessageToCANDriver( message, acl.driver );
 	free( message );
 	return ( status );
 }
 
 static uint8_t generateNewDelay( const uint8_t* name, uint8_t tickMs )
 {
-	uint16_t result = 0u;
-	for ( uint8_t i = 0u; i < 8u; i++ )
-	{
-		result += name[ i ];
-	}
-	result %= 255u;
-	result *= 6u;
-	result = ( uint16_t ) ( result / tickMs );
+    uint16_t result = 0u;
+    for ( uint8_t i = 0u; i < 8u; i++ )
+    {
+        result += name[ i ];
+    }
+    result %= 255u;
+    result *= 6u;
+    result = ( uint16_t ) ( result / tickMs );
 
-	return ( ( uint8_t ) result );
+    return ( ( uint8_t ) result );
 }
 
 static void handleWaitForContention( void )
 {
-    if ( isCANTxBusOffState( acl.config->driver ) )
+    if ( isCANTxBusOffState( acl.driver ) )
     {
-        acl.contentionCounterMs = acl.config->tickMs;
-        acl.pseudoDelay = generateNewDelay( acl.config->caName, acl.config->tickMs );
+        acl.contentionCounterMs = acl.tickMs;
+        acl.pseudoDelay = generateNewDelay( acl.caName, acl.tickMs );
         acl.state = DELAY_BEFORE_RECLAIM;
     }
     else if ( acl.wasContentionReceived )
     {
-        acl.contentionCounterMs = acl.config->tickMs;
+        acl.contentionCounterMs = acl.tickMs;
         if ( sendACLMessage( ) == CAN_TX_SUCCEEDED )
         {
             acl.wasContentionReceived = false;
@@ -78,13 +73,13 @@ static void handleWaitForContention( void )
     
     else if ( acl.contentionCounterMs == ( uint8_t ) CONTENTION_TIMEOUT_MS )
 	{
-		acl.contentionCounterMs = acl.config->tickMs;
+		acl.contentionCounterMs = acl.tickMs;
 		acl.wasAddressClaimed = true;
 		acl.state = NORMAL_TRAFFIC;
 	}
 	else
 	{
-		acl.contentionCounterMs += acl.config->tickMs;
+		acl.contentionCounterMs += acl.tickMs;
 	}
 }
 
@@ -103,7 +98,7 @@ static void handleNormalTraffic( void )
 
 static void handleDelayAndTransitionTo( uint8_t transitionState )
 {
-	if ( acl.pseudoDelay < acl.config->tickMs )
+	if ( acl.pseudoDelay < acl.tickMs )
 	{
 		if ( sendACLMessage( ) == CAN_TX_SUCCEEDED )
 		{
@@ -112,23 +107,26 @@ static void handleDelayAndTransitionTo( uint8_t transitionState )
 	}
 	else
 	{
-		acl.pseudoDelay -= acl.config->tickMs;
+		acl.pseudoDelay -= acl.tickMs;
 	}
 }
 
 /******************************************************************************/
-void configureAddressClaimed( aclConfigStruct_t* configuration )
-{
-    acl.config = configuration;
-    if ( isConfigValid( acl.config ) )
+void configureAddressClaimed( j1939_t stack, int8_t state )
+{    
+    if ( NULL != stack )
     {
-        acl.state = acl.config->initialState;
+        acl.driver = getJ1939ConfiguredCANDriver( stack );
+        acl.caName = getJ1939CAName( stack );
+        acl.sourceAddress = getJ1939SourceAddress( stack );
+        acl.tickMs = getJ1939ConfiguredTickMs( stack );
+        acl.state = state;
     }
     else
     {
         acl.state = UNDEFINED;
     }
-    acl.contentionCounterMs = acl.config->tickMs;
+    acl.contentionCounterMs = acl.tickMs;
     acl.wasAddressClaimed = false;
     acl.wasRequestForACLReceived = false;
     acl.wasMessageWithOwnSAReceived = false;

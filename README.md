@@ -5,7 +5,7 @@ https://en.wikipedia.org/wiki/SAE_J1939
 
 ## Functionality
 This library will handle:
-- CAN 2.0b (with future adaptatioin to CAN-FD)
+- CAN 2.0b (with future adaptation to CAN-FD)
 - Address Claim procedure
 - Multi Packet Transport Protocol procedure
 - Core Scheduler
