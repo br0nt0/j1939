@@ -36,5 +36,5 @@ TODO
 
 
 ## TODO
---Restrict to only signed commits--
+~~Restrict to only signed commits~~
 Address Claim procedure
