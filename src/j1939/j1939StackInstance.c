@@ -7,6 +7,7 @@
 #include "j1939StackInstance.h"
 #include "j1939/messageSend.h"
 #include "j1939/messageReceive.h"
+#include "j1939/addressClaimed.h"
 
 /******************************************************************************/
 typedef struct j1939StackInstanceStruct* j1939StackInstance_t;
@@ -15,16 +16,16 @@ typedef struct j1939StackInstanceStruct
 {
     j1939Struct_t base;
     canDriver_t driver;
-    uint8_t sourceAddress;
+    aclStruct_t acl;
     uint8_t caNameStorage[ 8 ];
-    uint8_t* caName;
     uint8_t tickMs;
 }j1939StackInstanceStruct_t;
 
 /******************************************************************************/
 static void destroy( j1939_t base )
 {
-    ( void ) base;
+    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+    free( stack );
 }
 
 static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
@@ -47,13 +48,13 @@ static j1939Message_t receiveMessage( j1939_t base )
 static void setSourceAddress( j1939_t base, uint8_t address )
 {
     j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
-    stack->sourceAddress = address;
+    stack->acl.sourceAddress = address;
 }
 
 static uint8_t getSourceAddress( j1939_t base )
 {
     j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
-    return ( stack->sourceAddress );
+    return ( stack->acl.sourceAddress );
 }
 
 static void setCAName( j1939_t base, const uint8_t* caName )
@@ -65,20 +66,14 @@ static void setCAName( j1939_t base, const uint8_t* caName )
         {
             stack->caNameStorage[ i ] = caName[ i ];
         }
-        stack->caName = stack->caNameStorage;
+        stack->acl.caName = stack->caNameStorage;
     }
 }
 
 static uint8_t* getCAName( j1939_t base )
 {
     j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
-    return ( stack->caName );
-}
-
-static canDriver_t getConfiguredCANDriver( j1939_t base )
-{
-    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
-    return ( stack->driver );
+    return ( stack->acl.caName );
 }
 
 static uint8_t getConfiguredTickMs( j1939_t base )
@@ -103,17 +98,15 @@ j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs )
             getSourceAddress,
             setCAName,
             getCAName,
-            getConfiguredCANDriver,
             getConfiguredTickMs
         };
-        static j1939StackInstanceStruct_t stackMemory;
 
-        self = &stackMemory;
+        self = ( j1939StackInstance_t ) malloc( sizeof( j1939StackInstanceStruct_t ) );
         self->base.iFace = &interface;
         self->base.type = "J1939Stack";
         self->driver = driver;
-        self->sourceAddress = 0xffu;
-        self->caName = NULL;
+        self->acl.sourceAddress = 0xffu;
+        self->acl.caName = NULL;
         self->tickMs = tickMs;
     }
 

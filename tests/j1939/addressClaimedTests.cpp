@@ -18,16 +18,13 @@ extern "C"
 TEST_GROUP( addressClaimed )
 {
 	canDriver_t spyCanDriver;
-	j1939_t testStack;
+	aclStruct_t acl;
 	uint8_t caName[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
-	int8_t initialState;
 	void setup( void )
 	{
 		spyCanDriver = createCANDriverSpy( );
-		testStack = createJ1939StackInstance( spyCanDriver, 10u );
-		setJ1939CAName( testStack, caName );
-		setJ1939SourceAddress( testStack, 0x01u );
-		initialState = UNDEFINED;
+		configureAddressClaim( &acl, spyCanDriver, caName, 10u, UNDEFINED );
+		acl.sourceAddress = 0x01u;
 	}
 	void teardown( void )
 	{
@@ -49,10 +46,10 @@ TEST_GROUP( addressClaimed )
 	void expectOneCallToSendMessageWithAddressClaim( void )
 	{
 		canMessageStruct_t expectedCANMessage;
-		expectedCANMessage.id = 0x18eeff00u + getJ1939SourceAddress( testStack );
+		expectedCANMessage.id = 0x18eeff00u + acl.sourceAddress;
 		expectedCANMessage.isExtended = true;
 		expectedCANMessage.dlc = 8u;
-		expectedCANMessage.data = getJ1939CAName( testStack );
+		expectedCANMessage.data = acl.caName;
 		expectCANOperational( );
 		mock( "CANSpy" ).expectOneCall( "sendMessage" )
 			.withPointerParameter( "base", spyCanDriver )
@@ -65,10 +62,10 @@ TEST_GROUP( addressClaimed )
 	void expectOneCallToSendMessageWithTxBufferFull( void )
 	{
 		canMessageStruct_t expectedCANMessage;
-		expectedCANMessage.id = 0x18eeff00u + getJ1939SourceAddress( testStack );
+		expectedCANMessage.id = 0x18eeff00u + acl.sourceAddress;
 		expectedCANMessage.isExtended = true;
 		expectedCANMessage.dlc = 8u;
-		expectedCANMessage.data = getJ1939CAName( testStack );
+		expectedCANMessage.data = acl.caName;
 		expectCANOperational( );
 		mock( "CANSpy" ).expectOneCall( "sendMessage" )
 			.withPointerParameter( "base", spyCanDriver )
@@ -100,14 +97,60 @@ TEST_GROUP( addressClaimed )
 	}
 };
 
-TEST( addressClaimed, given_null_stack_when_configuring_address_claimed_procedure_then_no_address_claimed_messaged_sent_to_CAN_driver )
+TEST( addressClaimed, given_null_item__when_configuring_address_claimed_procedure_then_nothing_happens )
 {
 	// given
-	configureAddressClaimed( NULL, initialState );
-	expectNoCallToSendMessage( );
+	configureAddressClaim( NULL, spyCanDriver, caName, 10u, INIT );
 
 	// when
-	updateAddressClaimed( );
+
+	// then
+	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
+}
+
+TEST( addressClaimed, given_null_CAN_driver_when_configuring_address_claimed_procedure_then_nothing_happens )
+{
+	// given
+	configureAddressClaim( &acl, NULL, caName, 10u, INIT );
+
+	// when
+
+	// then
+	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
+}
+
+TEST( addressClaimed, given_null_CA_name_when_configuring_address_claimed_procedure_then_nothing_happens )
+{
+	// given
+	configureAddressClaim( &acl, spyCanDriver, NULL, 10u, INIT );
+
+	// when
+
+	// then
+	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
+}
+
+TEST( addressClaimed, given_undefined_state_when_updating_address_claimed_procedure_then_nothing_happens )
+{
+	// given
+
+	// when
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+
+	// then
+	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
+}
+
+TEST( addressClaimed, given_null__when_configuring_address_claimed_procedure_then_nothing_happens )
+{
+	// given
+	configureAddressClaim( NULL, NULL, NULL, 0, UNDEFINED );
+
+	// when
+	updateAddressClaimed( NULL );
 
 	// then
 }
@@ -115,11 +158,11 @@ TEST( addressClaimed, given_null_stack_when_configuring_address_claimed_procedur
 TEST( addressClaimed, given_an_address_and_valid_config_when_in_init_state_then_an_address_claimed_messaged_is_sent_to_CAN_driver )
 {
 	// given
-	configureAddressClaimed( testStack, INIT );
+	acl.state = INIT;
 	expectOneCallToSendMessageWithAddressClaim( );
 
 	// when
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
 
 	// then
 }
@@ -127,14 +170,14 @@ TEST( addressClaimed, given_an_address_and_valid_config_when_in_init_state_then_
 TEST( addressClaimed, given_a_failed_message_transmit_when_in_init_state_then_an_address_claimed_messaged_is_sent_to_CAN_driver_with_next_iteration )
 {
 	// given
-	configureAddressClaimed( testStack, INIT );
+	acl.state = INIT;
 
 	expectOneCallToSendMessageWithTxBufferFull( );
 	expectOneCallToSendMessageWithAddressClaim( );
 
 	// when
-	updateAddressClaimed( );
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
 
 	// then
 }
@@ -142,34 +185,33 @@ TEST( addressClaimed, given_a_failed_message_transmit_when_in_init_state_then_an
 TEST( addressClaimed, given_no_address_content_and_no_bus_off_when_in_wait_for_contention_state_then_address_successfully_claimed_after_250ms )
 {
 	// given
-	uint8_t configTicksMs = getJ1939ConfiguredTickMs( testStack );
-	configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
-	expectNoBusOff( CONTENTION_TIMEOUT_MS / configTicksMs );
+	acl.state = WAIT_FOR_CONTENTION;
+	expectNoBusOff( CONTENTION_TIMEOUT_MS / acl.tickMs );
 
 	// when
-	for ( size_t i = 0; i < ( CONTENTION_TIMEOUT_MS / configTicksMs ); i++ )
+	for ( size_t i = 0; i < ( CONTENTION_TIMEOUT_MS / acl.tickMs ); i++ )
 	{
-		updateAddressClaimed( );
+		updateAddressClaimed( &acl );
 	}
 
 	// then
-	CHECK_TRUE( wasAddressClaimedSuccessfuly( ) );
+	CHECK_TRUE( wasAddressClaimedSuccessfuly( &acl ) );
 }
 
 TEST( addressClaimed, given_bus_off_event_when_in_wait_for_contention_state_then_a_random_delay_is_created_from_name_until_address_reclaim )
 {
 	// given
-	configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
+	acl.state = WAIT_FOR_CONTENTION;
 
 	mock( "CANSpy" ).expectOneCall( "isTxBusOffState" ).withPointerParameter( "base", spyCanDriver ).andReturnValue( true );
 	expectOneCallToSendMessageWithAddressClaim( );
-	uint16_t pseudoDelay = createPseudoDelay( getJ1939CAName( testStack ), getJ1939ConfiguredTickMs( testStack ) );
+	uint16_t pseudoDelay = createPseudoDelay( acl.caName, acl.tickMs );
 
 	// when
-	updateAddressClaimed( ); // transition to a delay handling state
+	updateAddressClaimed( &acl ); // transition to a delay handling state
 	for ( uint16_t i = 0u; i < ( pseudoDelay + 1u ); i++ )
 	{
-		updateAddressClaimed( ); // processing
+		updateAddressClaimed( &acl ); // processing
 	}
 
 	// then
@@ -178,20 +220,20 @@ TEST( addressClaimed, given_bus_off_event_when_in_wait_for_contention_state_then
 TEST( addressClaimed, given_bus_off_event_and_tx_buffer_full_when_in_wait_for_contention_state_then_a_random_delay_is_created_from_name_until_address_reclaim )
 {
 	// given
-	configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
+	acl.state = WAIT_FOR_CONTENTION;
 
 	mock( "CANSpy" ).expectOneCall( "isTxBusOffState" ).withPointerParameter( "base", spyCanDriver ).andReturnValue( true );
 	expectOneCallToSendMessageWithTxBufferFull( );
 	expectOneCallToSendMessageWithAddressClaim( );
-	uint16_t pseudoDelay = createPseudoDelay( getJ1939CAName( testStack ), getJ1939ConfiguredTickMs( testStack ) );
+	uint16_t pseudoDelay = createPseudoDelay( acl.caName, acl.tickMs );
 
 	// when
-	updateAddressClaimed( ); // transitioning to a delay handling state
+	updateAddressClaimed( &acl ); // transitioning to a delay handling state
 	for ( uint16_t i = 0u; i < ( pseudoDelay + 1u ); i++ )
 	{
-		updateAddressClaimed( ); // processing
+		updateAddressClaimed( &acl ); // processing
 	}
-	updateAddressClaimed( ); // one more for the address claim to go through
+	updateAddressClaimed( &acl ); // one more for the address claim to go through
 
 	// then
 }
@@ -200,16 +242,16 @@ TEST( addressClaimed, given_a_contending_message_with_name_bigger_than_mine_when
 {
 	// given
 	uint8_t contenderName[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u + 1u };
-	configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
+	acl.state = WAIT_FOR_CONTENTION;
 
 	expectNoBusOff( 2u );
-	registerReceivedContention( contenderName );
+	registerReceivedContention( &acl, contenderName );
 	expectOneCallToSendMessageWithTxBufferFull( );
 	expectOneCallToSendMessageWithAddressClaim( );
 
 	// when
-	updateAddressClaimed( );
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
 
 	// then
 }
@@ -218,10 +260,10 @@ TEST( addressClaimed, given_a_contending_message_with_name_equal_to_mine_when_in
 {
 	// given
 	uint8_t contenderName[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
-	configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
+	acl.state = WAIT_FOR_CONTENTION;
 
 	expectNoBusOff( 1u );
-	registerReceivedContention( contenderName );
+	registerReceivedContention( &acl, contenderName );
 	mock( "CANSpy" ).expectOneCall( "isOperational" )
 		.withPointerParameter( "base", spyCanDriver )
 		.andReturnValue( true );
@@ -230,60 +272,60 @@ TEST( addressClaimed, given_a_contending_message_with_name_equal_to_mine_when_in
 		.withUnsignedIntParameter( "id", 0x18eeff80u )
 		.withBoolParameter( "isExtended", true )
 		.withUnsignedIntParameter( "dlc", 8u )
-		.withPointerParameter( "data", getJ1939CAName( testStack ) )
+		.withPointerParameter( "data", acl.caName )
 		.andReturnValue( CAN_TX_BUFFER_FULL );
 
 	// when
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
 
 	// then
-	UNSIGNED_LONGS_EQUAL( 128u, getJ1939SourceAddress( testStack ) );
+	UNSIGNED_LONGS_EQUAL( 128u, acl.sourceAddress );
 }
 
 TEST( addressClaimed, given_contention_and_no_available_address_when_prioritizing_contention_then_cannot_claim_message_sent )
 {
 	// given
 	uint8_t contenderName[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
-	configureAddressClaimed( testStack, WAIT_FOR_CONTENTION );
+	acl.state = WAIT_FOR_CONTENTION;
 
 	// when
 	for ( uint8_t i = 0u; i < 120u; i++ )
 	{
 		expectNoBusOff( 1u );
-		registerReceivedContention( contenderName );
+		registerReceivedContention( &acl, contenderName );
 		expectCANOperational( );
 		mock( "CANSpy" ).expectOneCall( "sendMessage" )
 			.withPointerParameter( "base", spyCanDriver )
 			.withUnsignedIntParameter( "id", 0x18eeff00u + ( 128u + i ) )
 			.andReturnValue( CAN_TX_BUFFER_FULL )
 			.ignoreOtherParameters( );
-		updateAddressClaimed( );
+		updateAddressClaimed( &acl );
 	}
 
 	expectNoBusOff( 1u );
-	registerReceivedContention( contenderName );
+	registerReceivedContention( &acl, contenderName );
 	expectCANOperational( );
 	mock( "CANSpy" ).expectOneCall( "sendMessage" )
 		.withPointerParameter( "base", spyCanDriver )
 		.withUnsignedIntParameter( "id", 0x18eefffeu ) // cannot claim
 		.andReturnValue( CAN_TX_BUFFER_FULL )
 		.ignoreOtherParameters( );
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
 
-	updateAddressClaimed( ); // move to cannot claim state
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl ); // move to cannot claim state
+	updateAddressClaimed( &acl );
 
 	// then
-	UNSIGNED_LONGS_EQUAL( 254u, getJ1939SourceAddress( testStack ) );
+	UNSIGNED_LONGS_EQUAL( 254u, acl.sourceAddress );
 }
 
 TEST( addressClaimed, given_a_request_for_address_claim_when_cannot_claim_address_then_a_pseudo_delay_is_applied_before_sending_a_cannot_claim_messge )
 {
 	// given
-	configureAddressClaimed( testStack, CANNOT_CLAIM_ADDRESS );
-	registerRequestForAddressClaim( );
-	setJ1939SourceAddress( testStack, 254u );
-	uint16_t pseudoDelay = createPseudoDelay( getJ1939CAName( testStack ), getJ1939ConfiguredTickMs( testStack ) );
+	acl.state = CANNOT_CLAIM_ADDRESS;
+	registerRequestForAddressClaim( &acl );
+	acl.sourceAddress = 254u;
+	uint16_t pseudoDelay = createPseudoDelay( acl.caName, acl.tickMs );
 	expectCANOperational( );
 	mock( "CANSpy" ).expectOneCall( "sendMessage" )
 		.withPointerParameter( "base", spyCanDriver )
@@ -292,27 +334,27 @@ TEST( addressClaimed, given_a_request_for_address_claim_when_cannot_claim_addres
 		.ignoreOtherParameters( );
 
 	// when
-	updateAddressClaimed( ); // transitioning to a delay handling state
+	updateAddressClaimed( &acl ); // transitioning to a delay handling state
 	for ( uint16_t i = 0u; i < ( pseudoDelay + 1u ); i++ )
 	{
-		updateAddressClaimed( ); // processing
+		updateAddressClaimed( &acl ); // processing
 	}
-	updateAddressClaimed( ); // one more for the address claim to go through
+	updateAddressClaimed( &acl ); // one more for the address claim to go through
 
 	// then
-	UNSIGNED_LONGS_EQUAL( 254u, getJ1939SourceAddress( testStack ) );
+	UNSIGNED_LONGS_EQUAL( 254u, acl.sourceAddress );
 }
 
 TEST( addressClaimed, given_a_request_for_address_claim_when_in_normal_traffic_state_then_address_claim_message_is_sent )
 {
 	// given
-	configureAddressClaimed( testStack, NORMAL_TRAFFIC );
+	acl.state = NORMAL_TRAFFIC;
 
-	registerRequestForAddressClaim( );
+	registerRequestForAddressClaim( &acl );
 	expectOneCallToSendMessageWithAddressClaim( );
 
 	// when
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
 
 	// then
 }
@@ -320,16 +362,16 @@ TEST( addressClaimed, given_a_request_for_address_claim_when_in_normal_traffic_s
 TEST( addressClaimed, given_a_request_for_address_claim_when_in_normal_traffic_state_and_tx_buffer_full_then_address_claim_message_is_sent_when_buffer_has_slot )
 {
 	// given
-	configureAddressClaimed( testStack, NORMAL_TRAFFIC );
+	acl.state = NORMAL_TRAFFIC;
 
 
-	registerRequestForAddressClaim( );
+	registerRequestForAddressClaim( &acl );
 	expectOneCallToSendMessageWithTxBufferFull( );
 	expectOneCallToSendMessageWithAddressClaim( );
 
 	// when
-	updateAddressClaimed( );
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
 
 	// then
 }
@@ -337,13 +379,13 @@ TEST( addressClaimed, given_a_request_for_address_claim_when_in_normal_traffic_s
 TEST( addressClaimed, given_a_received_message_with_own_source_address_when_in_normal_traffic_state_then_address_claim_message_is_sent )
 {
 	// given
-	configureAddressClaimed( testStack, NORMAL_TRAFFIC );
+	acl.state = NORMAL_TRAFFIC;
 
-	registerReceivedMessageWithOwnSA( );
+	registerReceivedMessageWithOwnSA( &acl );
 	expectOneCallToSendMessageWithAddressClaim( );
 
 	// when
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
 
 	// then
 }
@@ -351,17 +393,17 @@ TEST( addressClaimed, given_a_received_message_with_own_source_address_when_in_n
 TEST( addressClaimed, given_no_contention_or_claim_or_message_with_own_SA_when_in_normal_traffic_state_then_nothing_happens )
 {
 	// given
-	configureAddressClaimed( testStack, NORMAL_TRAFFIC );
+	acl.state = NORMAL_TRAFFIC;
 
 	expectNoCallToSendMessage( );
 
 	// when
-	updateAddressClaimed( );
-	updateAddressClaimed( );
-	updateAddressClaimed( );
-	updateAddressClaimed( );
-	updateAddressClaimed( );
-	updateAddressClaimed( );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
+	updateAddressClaimed( &acl );
 
 	// then
 }

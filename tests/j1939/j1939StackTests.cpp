@@ -108,16 +108,6 @@ TEST( j1939Stack, given_null_stack_when_setting_CA_name_then_noting_happens )
     // then
 }
 
-TEST( j1939Stack, given_null_stack_when_getting_configured_CAN_driver_then_noting_happens )
-{
-    // given
-
-    // when
-
-    // then
-    CHECK_TRUE( NULL == getJ1939ConfiguredCANDriver( NULL ) );
-}
-
 TEST( j1939Stack, given_null_stack_when_getting_configured_tick_then_zero_returned )
 {
     // given

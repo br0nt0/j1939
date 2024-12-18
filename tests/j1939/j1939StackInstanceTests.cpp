@@ -161,17 +161,6 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_when_setting_the_CA_name_
     CHECK_TRUE( NULL == caName );
 }
 
-TEST( j1939StackInstance, given_a_j1939_stack_instance_when_getting_configured_CAN_driver_then_it_is_returned_through_the_interface )
-{
-    // given
-
-    // when
-    canDriver_t canDriver = getJ1939ConfiguredCANDriver( stack );
-
-    // then
-    POINTERS_EQUAL( spyCAN, canDriver );
-}
-
 TEST( j1939StackInstance, given_a_j1939_stack_instance_when_getting_configured_stack_tick_in_ms_then_it_is_returned_through_the_interface )
 {
     // given

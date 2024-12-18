@@ -80,16 +80,6 @@ void setJ1939CAName( j1939_t self, const uint8_t* caName )
     }
 }
 
-canDriver_t getJ1939ConfiguredCANDriver( j1939_t self )
-{
-    canDriver_t driver = NULL;
-    if ( NULL != self )
-    {
-        driver = self->iFace->getConfiguredCANDriver( self );
-    }
-    return ( driver );
-}
-
 uint8_t getJ1939ConfiguredTickMs( j1939_t self )
 {
     uint8_t tickMs = 0u;
