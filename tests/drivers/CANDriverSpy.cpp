@@ -46,6 +46,14 @@ static canMessage_t receiveMessage( canDriver_t base )
                                                 .withPointerParameter( "base", base )
                                                 .returnPointerValue( ) ) );
 }
+
+static bool_t isTxBusOffState( canDriver_t base )
+{
+    return ( mock( "CANSpy" ).actualCall( "isTxBusOffState" )
+                            .withPointerParameter( "base", base )
+                            .returnBoolValue( ) );
+}
+
 /******************************************************************************/
 canDriver_t createCANDriverSpy( void )
 {
@@ -55,6 +63,7 @@ canDriver_t createCANDriverSpy( void )
         isOperational,
         sendMessage,
         receiveMessage,
+        isTxBusOffState
     };
 
     canDriverSpy_t spy = new canDriverSpyStruct_t;

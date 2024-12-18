@@ -4,4 +4,5 @@ target_sources(${TEST_EXECUTABLE} PRIVATE
                                 ${PRJ_UNIT_TEST_DIR}/j1939/messageConverterTests.cpp
                                 ${PRJ_UNIT_TEST_DIR}/j1939/messageSendTests.cpp
                                 ${PRJ_UNIT_TEST_DIR}/j1939/j1939StackInstanceTests.cpp
-                                ${PRJ_UNIT_TEST_DIR}/j1939/messageReceiveTests.cpp)
+                                ${PRJ_UNIT_TEST_DIR}/j1939/messageReceiveTests.cpp
+                                ${PRJ_UNIT_TEST_DIR}/j1939/addressClaimedTests.cpp)

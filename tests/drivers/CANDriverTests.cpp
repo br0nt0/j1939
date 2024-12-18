@@ -77,3 +77,14 @@ TEST( CANDriver, given_null_driver_when_receiving_a_message_then_no_seg_fault )
     // then
     CHECK_TRUE( NULL == message );
 }
+
+TEST( CANDriver, given_null_driver_when_checking_for_buss_off_state_then_no_seg_fault )
+{
+    // given
+
+    // when
+
+    // then
+    CHECK_FALSE( isCANTxBusOffState( NULL ) );
+    
+}

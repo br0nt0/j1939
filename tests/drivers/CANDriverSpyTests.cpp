@@ -113,3 +113,14 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_many_messages_then_the_e
     POINTERS_EQUAL( &expectedMessage1, actualMessage1 );
     POINTERS_EQUAL( &expectedMessage2, actualMessage2 );
 }
+
+TEST( CANDriverSpy, given_spy_CAN_driver_when_checking_if_buss_off_state_then_value_is_returned )
+{
+    // given
+    mock( "CANSpy" ).expectOneCall( "isTxBusOffState" ).withPointerParameter( "base", spy ).andReturnValue( true );
+
+    // when
+
+    // then
+    CHECK_TRUE( isCANTxBusOffState( spy ) );
+}

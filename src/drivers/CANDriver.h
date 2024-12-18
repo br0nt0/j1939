@@ -15,6 +15,7 @@ enum
 {
     CAN_DRIVER_IS_NULL = 0u,
     CAN_DRIVER_NOT_OPERATIONAL,
+    CAN_TX_BUFFER_FULL,
     CAN_TX_SUCCEEDED
 };
 
@@ -28,6 +29,7 @@ uint8_t sendCANMessage( canDriver_t self, const canMessage_t message );
 canMessage_t receiveCANMessage( canDriver_t self );
 bool_t isCANDriverOperational( canDriver_t self );
 const char* getCANDriverType( canDriver_t driver );
+bool_t isCANTxBusOffState( canDriver_t self );
 
 
 

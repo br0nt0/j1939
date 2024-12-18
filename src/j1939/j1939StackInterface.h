@@ -31,8 +31,12 @@ typedef struct j1939InterfaceStruct
     void ( *destroy )( j1939_t );
     uint8_t( *sendJ1939Message )( j1939_t, j1939Message_t );
     j1939Message_t( *receiveJ1939Message )( j1939_t );
+    void ( *setSourceAddress )( j1939_t, uint8_t );
+    uint8_t( *getSourceAddress )( j1939_t );
+    void ( *setCAName )( j1939_t, const uint8_t* );
+    uint8_t* ( *getCAName )( j1939_t );
+    uint8_t( *getTickMs )( j1939_t );
 }j1939InterfaceStruct_t;
-
 
 /******************************************************************************/
 
