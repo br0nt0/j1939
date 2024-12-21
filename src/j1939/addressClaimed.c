@@ -118,6 +118,7 @@ inline static void handleCannotClaimAddress( acl_t acl )
 	if ( acl->wasRequestForACLReceived )
 	{
 		acl->pseudoDelay = generateDelayBasedOnCAName( acl->caName, acl->tickMs );
+		acl->wasRequestForACLReceived = false;
 		acl->state = DELAY_BEFORE_CANNOT_CLAIM;
 	}
 }
@@ -133,6 +134,11 @@ inline static void handleNormalTraffic( acl_t acl )
 			acl->wasMessageWithOwnSAReceived = false;
 		}
 	}
+	else if ( acl->wasContentionReceived )
+	{
+		prioritizeContention( acl );
+	}
+	
 }
 
 /******************************************************************************/

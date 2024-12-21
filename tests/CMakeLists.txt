@@ -63,7 +63,7 @@ target_link_libraries(${TEST_EXECUTABLE} PRIVATE
 # Run the test once the build is done
 add_custom_command(TARGET ${TEST_EXECUTABLE} COMMAND ./${TEST_EXECUTABLE} -c POST_BUILD)
 
-# add custom target to run gcovr
+# add custom target to run gcovr for coverage
 set(OPEN_APPLICATION )
 if (UNIX)
     set(OPEN_APPLICATION firefox)
@@ -77,6 +77,14 @@ add_custom_command(OUTPUT run_gcovr_parser POST_BUILD
                                     --cobertura ${CMAKE_BINARY_DIR}/coverage.xml
                                     --cobertura-pretty
                     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-                    COMMENT "Running gcovr to produce XML and HTML coverage reports")
-add_custom_target(coverage DEPENDS ${TEST_EXECUTABLE} run_gcovr_parser )
+                    COMMENT "Running gcovr to produce XML and HTML coverage reports")               
+add_custom_target(coverage DEPENDS ${TEST_EXECUTABLE} run_gcovr_parser)
 add_custom_command(TARGET coverage COMMAND ${OPEN_APPLICATION} ${CMAKE_BINARY_DIR}/coverage.html POST_BUILD)
+
+
+# add custom target to run lizard for code complexity
+add_custom_command(OUTPUT run_lizard_parser POST_BUILD
+                    COMMAND lizard ../../src
+                    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                    COMMENT "Running Lizard to produce code complexity report")
+add_custom_target(complexity DEPENDS ${TEST_EXECUTABLE} run_lizard_parser)  
