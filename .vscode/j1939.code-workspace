@@ -70,6 +70,7 @@
 		"C_Cpp.vcFormat.space.withinSquareBrackets": true,
 		"editor.autoSurround": "languageDefined",
 		"editor.formatOnType": true,
+		"terminal.integrated.fontFamily": "UbuntuMono Nerd Font Mono",
 		"files.associations": {
 			"j1939stack.h": "c",
 			"j1939stackinterface.h": "c",
