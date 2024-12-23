@@ -70,6 +70,7 @@
 		"C_Cpp.vcFormat.space.withinSquareBrackets": true,
 		"editor.autoSurround": "languageDefined",
 		"editor.formatOnType": true,
+		"terminal.integrated.fontFamily": "UbuntuMono Nerd Font Mono",
 		"files.associations": {
 			"j1939stack.h": "c",
 			"j1939stackinterface.h": "c",
@@ -84,7 +85,12 @@
 			"j1939stackinstance.h": "c",
 			"stddef.h": "c",
 			"stdbool.h": "c",
-			"string.h": "c"
+			"string.h": "c",
+			"controllerapplicationname.h": "c",
+			"addressclaimed.h": "c",
+			"candriver.h": "c",
+			"array": "cpp",
+			"string_view": "cpp"
 		}
 	}
 }

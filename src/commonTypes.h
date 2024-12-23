@@ -10,6 +10,9 @@
 #include "stdint.h"
 #include "stddef.h"
 #include "stdbool.h"
+#include "stdlib.h"
+
+#define GLOBAL_ADDRESS ( 255u )
 
 typedef bool bool_t;
 typedef float float32_t;

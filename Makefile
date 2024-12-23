@@ -1,4 +1,4 @@
-.PHONY: all utest utestConf clean cleanTests gcovr
+.PHONY: all utest utestConf clean cleanTests gcovr lizard
 
 BUILD_DIR = build
 TEST_BUILD_DIR := ${BUILD_DIR}/utest
@@ -19,6 +19,9 @@ utest: utestConf
 
 gcovr: utestConf
 	$(MAKE) -C ${TEST_BUILD_DIR} coverage --no-print-directory
+
+lizard: utestConf
+	$(MAKE) -C ${TEST_BUILD_DIR} complexity --no-print-directory
 
 cleanTests:
 	@rm -rf $(TEST_BUILD_DIR)

@@ -64,3 +64,56 @@ TEST( j1939Stack, given_null_stack_when_receiving_a_j1939_message_then_no_seg_fa
     // then
     CHECK_TRUE( NULL == message );
 }
+
+TEST( j1939Stack, given_null_stack_when_getting_stack_source_address_then_0xff_returned )
+{
+    // given
+
+    // when
+    uint8_t sourceAddress = getJ1939SourceAddress( NULL );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 0xffu, sourceAddress );
+}
+
+TEST( j1939Stack, given_null_stack_when_setting_stack_source_address_then_noting_happens )
+{
+    // given
+
+    // when
+    setJ1939SourceAddress( NULL, 0x11u );
+
+    // then
+}
+
+TEST( j1939Stack, given_null_stack_when_getting_stack_CA_name_then_null_returned )
+{
+    // given
+
+    // when
+    const uint8_t* caName = getJ1939CAName( NULL );
+
+    // then
+    CHECK_TRUE( NULL == caName );
+}
+
+TEST( j1939Stack, given_null_stack_when_setting_CA_name_then_noting_happens )
+{
+    // given
+    uint8_t caName[ 8 ] = { 0x11u, 0x22u, 0x33u, 0x44u, 0x55u, 0x66u, 0x77u, 0x88u };
+
+    // when
+    setJ1939CAName( NULL, caName );
+
+    // then
+}
+
+TEST( j1939Stack, given_null_stack_when_getting_configured_tick_then_zero_returned )
+{
+    // given
+
+    // when
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 0u, getJ1939ConfiguredTickMs( NULL ) );
+}
