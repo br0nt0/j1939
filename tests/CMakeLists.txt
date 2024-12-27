@@ -44,6 +44,7 @@ target_sources(${TEST_EXECUTABLE} PRIVATE
                                     ${UT_DIR}/uTestMain.cpp)
 add_subdirectory(drivers)
 add_subdirectory(j1939)
+add_subdirectory(mcu)
 
 
 target_compile_definitions(${TEST_EXECUTABLE} PRIVATE
