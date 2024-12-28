@@ -90,7 +90,8 @@
 			"addressclaimed.h": "c",
 			"candriver.h": "c",
 			"array": "cpp",
-			"string_view": "cpp"
+			"string_view": "cpp",
+			"can.h": "c"
 		}
 	}
 }
