@@ -157,10 +157,6 @@ enum
 	CAN_TX_BUS_PASSIVE_STATE = 0x10u,
 	CAN_TX_BUS_OFF_STATE = 0x20u
 };
-
-/****************************************************
- * PUBLIC TYPEDEFS
- *****************************************************/
 typedef enum
 {
 	CAN1 = 0u,

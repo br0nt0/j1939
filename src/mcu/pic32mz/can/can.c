@@ -6,13 +6,14 @@
  ******************************************************************************/
 #include "can.h"
 #include "commonTypes.h"
+#include "canRegisterIO.h"
 
 /******************************************************************************/
-typedef struct picCANDriverStruct* picCANDriver_t;
 struct picCANDriverStruct
 {
     canDriverStruct_t base;
     canDriverInterfaceStruct_t interface;
+    uint8_t module;
 };
 /******************************************************************************/
 static void destroy( canDriver_t base )
@@ -24,40 +25,25 @@ static void destroy( canDriver_t base )
 static bool_t isOperational( canDriver_t base )
 {
     picCANDriver_t self = ( picCANDriver_t ) base;
-    ( void ) self;
-    return ( true );
-}
-
-static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
-{
-    ( void ) base;
-    ( void ) message;
-    return( 0u );
-}
-
-static canMessage_t receiveMessage( canDriver_t base )
-{
-    ( void ) base;
-    return ( NULL );
-}
-
-static bool_t isTxBusOffState( canDriver_t base )
-{
-    ( void ) base;
-    return ( false );
+    canRegisters_t* registers = getCANModuleRegisters( self->module );
+    return ( registers->CxCON.bits.CANBUSY > 0u );
 }
 
 /******************************************************************************/
-canDriver_t createPIC32MZCANDriver( void )
+canDriver_t createPIC32MZCANDriverForModule( uint8_t module )
 {
     picCANDriver_t self = ( picCANDriver_t ) malloc( sizeof( struct picCANDriverStruct ) );
     self->interface.destroy = destroy;
     self->interface.isOperational = isOperational;
-    self->interface.isTxBussOffState = isTxBusOffState;
-    self->interface.sendMessage = sendMessage;
-    self->interface.receiveMessage = receiveMessage;
     self->base.vTable = &self->interface;
     self->base.type = "PIC32MZ";
+    self->module = module;
 
     return ( ( canDriver_t ) self );
+}
+
+uint8_t getPIC32MZCANConfiguredModule( canDriver_t base )
+{
+    picCANDriver_t self = ( picCANDriver_t ) base;
+    return ( self->module );
 }

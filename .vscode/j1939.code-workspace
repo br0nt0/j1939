@@ -91,7 +91,10 @@
 			"candriver.h": "c",
 			"array": "cpp",
 			"string_view": "cpp",
-			"can.h": "c"
+			"can.h": "c",
+			"canregisterio.h": "c",
+			"canenumtypes.h": "c",
+			"cantypes.h": "c"
 		}
 	}
 }
