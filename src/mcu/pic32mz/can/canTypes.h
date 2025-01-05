@@ -15,6 +15,8 @@
 #define CAN_NUM_OF_FILTER_CONTROL_REGS 	8u
 #define CAN_NUM_OF_FIFOS				32u
 
+#define CXFIFOCON_UINC_MASK             0x00002000u
+
 typedef struct
 {
 		unsigned int DNCNT :5;

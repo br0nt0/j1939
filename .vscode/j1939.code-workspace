@@ -94,7 +94,9 @@
 			"can.h": "c",
 			"canregisterio.h": "c",
 			"canenumtypes.h": "c",
-			"cantypes.h": "c"
+			"cantypes.h": "c",
+			"candriverinterface.h": "c",
+			"canrxtxstructures.h": "c"
 		}
 	}
 }

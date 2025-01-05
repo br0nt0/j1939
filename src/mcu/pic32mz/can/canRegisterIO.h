@@ -9,8 +9,10 @@
 /******************************************************************************/
 #include "canTypes.h"
 #include "canEnumTypes.h"
+#include "canRxTxStructures.h"
 
 /******************************************************************************/
 canRegisters_t* getCANModuleRegisters( canModule_t module );
+canRxMessageBuffer_t* getRxCxFIFOUA( canModule_t module, canFifo_t fifo );
 
 #endif /* CANREGISTERIO_H_ */

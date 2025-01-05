@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file	canRegisterIOMockTests.cpp
- * @brief	
+ * @brief
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
@@ -21,7 +21,22 @@ TEST_GROUP( canRegisterIOMock )
     void teardown( void )
     {
         mock( "PIC32MZ_CAN" ).checkExpectations( );
-		mock( ).clear( );
+        mock( ).clear( );
+    }
+    void expectOneCallToGetCANRegistersOfModule( canModule_t module, canRegisters_t * regs )
+    {
+        mock( "PIC32MZ_CAN" )
+            .expectOneCall( "getPIC32MZCANModuleRegs" )
+            .withParameter( "module", module )
+            .andReturnValue( regs );
+    }
+    void expectOneCallToGetFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canRxMessageBuffer_t * buffer )
+    {
+        mock( "PIC32MZ_CAN" )
+            .expectOneCall( "getPIC32MZRxCxFIFOUA" )
+            .withParameter( "module", module )
+            .withParameter( "fifo", fifo )
+            .andReturnValue( buffer );
     }
 };
 
@@ -29,10 +44,7 @@ TEST( canRegisterIOMock, given_the_can_module_1_when_getting_address_pointer_fro
 {
     // given
     canRegisters_t* expectedCANModule1Registers = &canRegisters[ 0 ];
-    mock( "PIC32MZ_CAN" )
-        .expectOneCall( "getPIC32MZCANModuleRegs" )
-        .withParameter( "module", CAN1 )
-        .andReturnValue( expectedCANModule1Registers );
+    expectOneCallToGetCANRegistersOfModule( CAN1, expectedCANModule1Registers );
 
     // when
     canRegisters_t* canModule1Regs = getCANModuleRegisters( CAN1 );
@@ -41,19 +53,32 @@ TEST( canRegisterIOMock, given_the_can_module_1_when_getting_address_pointer_fro
     POINTERS_EQUAL( expectedCANModule1Registers, canModule1Regs );
 }
 
-TEST( canRegisterIOMock, given_the_can_module_2_when_getting_address_pointer_from_HW_then_full_register_structure_returned )
+TEST( canRegisterIOMock, given_a_can_controller_when_getting_address_pointer_from_HW_then_all_modules_can_be_returned )
 {
     // given
-    
-    canRegisters_t* expectedCANModule1Registers = &canRegisters[ 1 ];
-    mock( "PIC32MZ_CAN" )
-        .expectOneCall( "getPIC32MZCANModuleRegs" )
-        .withParameter( "module", CAN2 )
-        .andReturnValue( expectedCANModule1Registers );
+    for ( size_t i = 0; i < CAN_NUMBER_OF_MODULES; i++ )
+    {
+        expectOneCallToGetCANRegistersOfModule( ( canModule_t ) i, &canRegisters[ i ] );
 
     // when
-    canRegisters_t* canModule1Regs = getCANModuleRegisters( CAN2 );
+        canRegisters_t* canModuleRegs = getCANModuleRegisters( ( canModule_t ) i );
 
     // then
-    POINTERS_EQUAL( expectedCANModule1Registers, canModule1Regs );
+        POINTERS_EQUAL( &canRegisters[ i ], canModuleRegs );
+    }
 }
+
+TEST( canRegisterIOMock, given_a_configured_receive_HW_fifo_when_getting_message_then_receive_message_buffer_received )
+{
+    // given
+    canRxMessageBuffer_t receivedBuffer;
+    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &receivedBuffer );
+
+    // when
+    canRxMessageBuffer_t* message = getRxCxFIFOUA( CAN1, CAN_FIFO0 );
+
+    // then
+    POINTERS_EQUAL( &receivedBuffer, message );
+}
+
+
