@@ -20,6 +20,7 @@ TEST_GROUP( can )
 {
     canDriver_t driver;
     canRegisters_t canRegs;
+    canTxMessageBuffer_t txMessageBuffer;
     void setup( void )
     {
         expectOneCallToGetCANRegistersOfModule( CAN1 );
@@ -39,10 +40,18 @@ TEST_GROUP( can )
         .withParameter( "module", module )
         .andReturnValue( &canRegs );
     }
-    void expectOneCallToGetFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canRxMessageBuffer_t* buffer )
+    void expectOneCallToGetRxFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canRxMessageBuffer_t* buffer )
     {
         mock( "PIC32MZ_CAN" )
             .expectOneCall( "getPIC32MZRxCxFIFOUA" )
+            .withParameter( "module", module )
+            .withParameter( "fifo", fifo )
+            .andReturnValue( buffer );
+    }
+    void expectOneCallToGetTxFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canTxMessageBuffer_t* buffer )
+    {
+        mock( "PIC32MZ_CAN" )
+            .expectOneCall( "getPIC32MZTxCxFIFOUA" )
             .withParameter( "module", module )
             .withParameter( "fifo", fifo )
             .andReturnValue( buffer );
@@ -131,7 +140,7 @@ TEST( can, given_a_non_empty_receive_fifo_and_a_null_user_address_register_when_
 {
     // given
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
-    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, NULL );
+    expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, NULL );
 
     // when
     canMessage_t message = receiveCANMessage( driver );
@@ -148,7 +157,7 @@ TEST( can, given_fifo_0_with_one_message_when_receiving_a_CAN_message_then_an_ex
 	msg.sid.SID = 0xc0u;
 	msg.eid.DLC = 8u;
     msg.eid.IDE = 1u;
-    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
+    expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
@@ -169,7 +178,7 @@ TEST( can, given_fifo_0_with_one_message_when_receiving_a_CAN_message_then_a_sta
 	msg.sid.SID = 0xc0u;
 	msg.eid.DLC = 8u;
     msg.eid.IDE = 0u;
-    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
+    expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
@@ -187,7 +196,7 @@ TEST( can, given_fifo_0_with_message_with_data_when_receiving_a_CAN_message_then
     canRxMessageBuffer_t msg;
     msg.eid.DLC = 8u;
     memset( msg.data, 0xa3, msg.eid.DLC );
-    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
+    expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
@@ -201,7 +210,7 @@ TEST( can, given_fifo_0_as_receive_fifo_when_receiving_a_CAN_message_then_UINC_i
 {
     // given
     canRxMessageBuffer_t msg;
-    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
+    expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &msg );
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
@@ -210,4 +219,127 @@ TEST( can, given_fifo_0_as_receive_fifo_when_receiving_a_CAN_message_then_UINC_i
     // then
     UNSIGNED_LONGS_EQUAL( CXFIFOCON_UINC_MASK, canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOCONSET );
 }
+
+TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_extended_CAN_message_to_HW_then_registers_are_loaded_accordingly )
+{
+    // given
+    canMessageStruct_t canMessage;
+    static uint8_t data[ 4 ] = { 0x11, 0x22, 0x33, 0x44 };
+    canMessage.id = 0x1fffffffu;
+	canMessage.dlc = 4u;
+	canMessage.isExtended = true;
+    canMessage.data = data;
+    
+    expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
+    canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
+
+    // when
+    uint8_t status = sendCANMessage( driver, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( canMessage.id >> 18u & 0x7ffu, txMessageBuffer.sid.SID );
+	UNSIGNED_LONGS_EQUAL( canMessage.id & 0x3ffffu, txMessageBuffer.eid.EID );
+	UNSIGNED_LONGS_EQUAL( canMessage.dlc, txMessageBuffer.eid.DLC );
+	UNSIGNED_LONGS_EQUAL( 1u, txMessageBuffer.eid.SRR );
+	UNSIGNED_LONGS_EQUAL( 1u, txMessageBuffer.eid.IDE );
+	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RTR );
+	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB0 );
+    UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB1 );
+    MEMCMP_EQUAL( canMessage.data, txMessageBuffer.data, txMessageBuffer.eid.DLC );
+    UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
+}
+
+TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_standard_CAN_message_to_HW_then_registers_are_loaded_accordingly )
+{
+    // given
+    canMessageStruct_t canMessage;
+    static uint8_t data[ 4 ] = { 0x11, 0x22, 0x33, 0x44 };
+    canMessage.id = 0x7ffu;
+	canMessage.dlc = 4u;
+	canMessage.isExtended = false;
+    canMessage.data = data;
+    
+    expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
+    canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
+
+    // when
+    uint8_t status = sendCANMessage( driver, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( canMessage.id & 0x7ffu, txMessageBuffer.sid.SID );
+	UNSIGNED_LONGS_EQUAL( canMessage.dlc, txMessageBuffer.eid.DLC );
+	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.SRR );
+	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.IDE );
+	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RTR );
+	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB0 );
+    UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB1 );
+    MEMCMP_EQUAL( canMessage.data, txMessageBuffer.data, txMessageBuffer.eid.DLC );
+    UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
+}
+
+TEST( can, given_fifo_1_as_transmit_fifo_when_sending_a_CAN_message_to_HW_then_transmit_fifo_is_flushed )
+{
+    // given
+    canMessageStruct_t canMessage;
+    static uint8_t data[ 4 ] = { 0x11, 0x22, 0x33, 0x44 };
+    canMessage.id = 0x7ffu;
+	canMessage.dlc = 4u;
+	canMessage.isExtended = false;
+    canMessage.data = data;
+    
+    expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
+    canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
+
+    // when
+    uint8_t status = sendCANMessage( driver, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
+    CHECK_TRUE( ( canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOCONSET & CXFIFOCON_TXREQ_MASK ) > 0u );
+}
+
+TEST( can, given_full_transmit_fifo_when_sending_a_CAN_message_to_HW_then_no_message_is_sent_and_status_is_buffer_full )
+{
+    // given
+    txMessageBuffer.sid.SID = 0x123u;
+    canMessageStruct_t canMessage;
+    static uint8_t data[ 4 ] = { 0x11, 0x22, 0x33, 0x44 };
+    canMessage.id = 0x7ffu;
+	canMessage.dlc = 4u;
+	canMessage.isExtended = false;
+    canMessage.data = data;
+    
+    mock( "PIC32MZ_CAN" ).expectNoCall( "getPIC32MZRxCxFIFOUA" );
+    canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 0u;
+
+    // when
+    uint8_t status = sendCANMessage( driver, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( CAN_TX_BUFFER_FULL, status );
+    UNSIGNED_LONGS_EQUAL( 0x123u, txMessageBuffer.sid.SID );
+}
+
+TEST( can, given_full_transmit_fifo_when_sending_a_CAN_message_to_HW_then_UINC_register_is_set )
+{
+    // given
+    canMessageStruct_t canMessage;
+    static uint8_t data[ 4 ] = { 0x11, 0x22, 0x33, 0x44 };
+    canMessage.id = 0x7ffu;
+	canMessage.dlc = 4u;
+	canMessage.isExtended = false;
+    canMessage.data = data;
+    
+    expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
+    canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
+
+    // when
+    uint8_t status = sendCANMessage( driver, &canMessage );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
+    CHECK_TRUE( ( canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOCONSET & CXFIFOCON_UINC_MASK ) > 0u );
+}
+
+
 

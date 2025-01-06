@@ -28,3 +28,13 @@ canRxMessageBuffer_t* getRxCxFIFOUA( canModule_t module, canFifo_t fifo )
         .returnValue( ).getPointerValue( );
 }
 
+canTxMessageBuffer_t* getTxCxFIFOUA( canModule_t module, canFifo_t fifo )
+{
+    return ( canTxMessageBuffer_t* ) mock( "PIC32MZ_CAN" )
+        .actualCall( "getPIC32MZTxCxFIFOUA" )
+        .withParameter( "module", module )
+        .withParameter( "fifo", fifo )
+        .returnValue( ).getPointerValue( );
+}
+
+

@@ -16,6 +16,7 @@
 #define CAN_NUM_OF_FIFOS				32u
 
 #define CXFIFOCON_UINC_MASK             0x00002000u
+#define CXFIFOCON_TXREQ_MASK            0x00000008u
 
 typedef struct
 {

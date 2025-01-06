@@ -30,10 +30,18 @@ TEST_GROUP( canRegisterIOMock )
             .withParameter( "module", module )
             .andReturnValue( regs );
     }
-    void expectOneCallToGetFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canRxMessageBuffer_t * buffer )
+    void expectOneCallToGetRxFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canRxMessageBuffer_t * buffer )
     {
         mock( "PIC32MZ_CAN" )
             .expectOneCall( "getPIC32MZRxCxFIFOUA" )
+            .withParameter( "module", module )
+            .withParameter( "fifo", fifo )
+            .andReturnValue( buffer );
+    }
+    void expectOneCallToGetTxFifoUserAddressRegisterOfModule( canModule_t module, canFifo_t fifo, canTxMessageBuffer_t * buffer )
+    {
+        mock( "PIC32MZ_CAN" )
+            .expectOneCall( "getPIC32MZTxCxFIFOUA" )
             .withParameter( "module", module )
             .withParameter( "fifo", fifo )
             .andReturnValue( buffer );
@@ -68,17 +76,30 @@ TEST( canRegisterIOMock, given_a_can_controller_when_getting_address_pointer_fro
     }
 }
 
-TEST( canRegisterIOMock, given_a_configured_receive_HW_fifo_when_getting_message_then_receive_message_buffer_received )
+TEST( canRegisterIOMock, given_a_configured_receive_HW_fifo_when_getting_message_then_receive_message_user_addresss_register_buffer_received )
 {
     // given
     canRxMessageBuffer_t receivedBuffer;
-    expectOneCallToGetFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &receivedBuffer );
+    expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, &receivedBuffer );
 
     // when
     canRxMessageBuffer_t* message = getRxCxFIFOUA( CAN1, CAN_FIFO0 );
 
     // then
     POINTERS_EQUAL( &receivedBuffer, message );
+}
+
+TEST( canRegisterIOMock, given_a_configured_transmit_HW_fifo_when_setting_the_message_then_transmit_user_address_register_buffer_received )
+{
+    // given
+    canTxMessageBuffer_t sendBuffer;
+    expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &sendBuffer );
+
+    // when
+    canTxMessageBuffer_t* message = getTxCxFIFOUA( CAN1, CAN_FIFO1 );
+
+    // then
+    POINTERS_EQUAL( &sendBuffer, message );
 }
 
 

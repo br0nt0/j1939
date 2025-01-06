@@ -14,5 +14,6 @@
 /******************************************************************************/
 canRegisters_t* getCANModuleRegisters( canModule_t module );
 canRxMessageBuffer_t* getRxCxFIFOUA( canModule_t module, canFifo_t fifo );
+canTxMessageBuffer_t* getTxCxFIFOUA( canModule_t module, canFifo_t fifo );
 
 #endif /* CANREGISTERIO_H_ */

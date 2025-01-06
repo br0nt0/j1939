@@ -1,6 +1,6 @@
 /*******************************************************************************
  * @file	can.c
- * @brief	
+ * @brief
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
@@ -39,22 +39,22 @@ static bool_t isTxBusOff( canDriver_t base )
 
 static void processMessageBuffer( canMessage_t msg, canRxMessageBuffer_t* buffer )
 {
-	msg->isExtended = ( buffer->eid.IDE > 0u ) ? true : false;
-	if ( msg->isExtended )
-	{
-		msg->id = ( uint32_t ) buffer->eid.EID + ( ( uint32_t ) buffer->sid.SID << 18u );
-	}
-	else
-	{
-		msg->id = buffer->sid.SID;
-	}
-	msg->dlc = ( uint8_t ) buffer->eid.DLC;
-	msg->data = buffer->data;
+    msg->isExtended = ( buffer->eid.IDE > 0u ) ? true : false;
+    if ( msg->isExtended )
+    {
+        msg->id = ( uint32_t ) buffer->eid.EID + ( ( uint32_t ) buffer->sid.SID << 18u );
+    }
+    else
+    {
+        msg->id = buffer->sid.SID;
+    }
+    msg->dlc = ( uint8_t ) buffer->eid.DLC;
+    msg->data = buffer->data;
 }
 
 static void updateFifo( picCANDriver_t self, canFifo_t fifo )
 {
-    self->moduleRegs->canFifoRegisters[ fifo ].CxFIFOCONSET = CXFIFOCON_UINC_MASK;
+    self->moduleRegs->canFifoRegisters[ fifo ].CxFIFOCONSET |= CXFIFOCON_UINC_MASK;
 }
 
 static bool_t isReceiveFifoEmpty( picCANDriver_t self, uint8_t fifo )
@@ -80,6 +80,55 @@ static canMessage_t receiveMessage( canDriver_t base )
     return ( msg );
 }
 
+static void loadMessageIntoBuffer( const canMessage_t message, canTxMessageBuffer_t* buffer )
+{
+    if ( message->isExtended )
+    {
+        buffer->sid.SID = ( message->id >> 18u ) & 0x7ffu;
+        buffer->eid.EID = message->id & 0x3ffffu;
+        buffer->eid.IDE = 1u;
+        buffer->eid.SRR = 1u;
+    }
+    else
+    {
+        buffer->sid.SID = message->id & 0x7ffu;
+        buffer->eid.IDE = 0u;
+    }
+    buffer->eid.DLC = message->dlc;
+    buffer->eid.RTR = 0u;
+    buffer->eid.RB0 = 0u;
+    buffer->eid.RB1 = 0u;
+    for ( uint8_t i = 0u; i < message->dlc; ++i )
+    {
+        buffer->data[ i ] = message->data[ i ];
+    }
+}
+static void flushTxFifo( picCANDriver_t driver, canFifo_t fifo )
+{
+    driver->moduleRegs->canFifoRegisters[ fifo ].CxFIFOCONSET |= CXFIFOCON_TXREQ_MASK;
+}
+
+static bool_t isTxFifoFull( picCANDriver_t driver, canFifo_t fifo )
+{
+    return ( driver->moduleRegs->canFifoRegisters[ fifo ].CxFIFOINT.bits.TXNFULLIF > 0u );
+}
+
+static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
+{
+    picCANDriver_t self = ( picCANDriver_t ) base;
+    uint8_t status = CAN_TX_BUFFER_FULL;
+    if ( isTxFifoFull( self, CAN_FIFO1 ) )
+    {
+        canTxMessageBuffer_t* fifoBuffer = getTxCxFIFOUA( self->module, CAN_FIFO1 );
+        loadMessageIntoBuffer( message, fifoBuffer );
+        updateFifo( self, CAN_FIFO1 );
+        flushTxFifo( self, CAN_FIFO1 );
+        status = CAN_TX_SUCCEEDED;
+    }
+
+    return ( status );
+}
+
 /******************************************************************************/
 canDriver_t createPIC32MZCANDriverForModule( uint8_t module )
 {
@@ -88,6 +137,7 @@ canDriver_t createPIC32MZCANDriverForModule( uint8_t module )
     self->interface.isOperational = isOperational;
     self->interface.isTxBussOffState = isTxBusOff;
     self->interface.receiveMessage = receiveMessage;
+    self->interface.sendMessage = sendMessage;
     self->base.vTable = &self->interface;
     self->base.type = "PIC32MZ";
     self->moduleRegs = getCANModuleRegisters( module );
