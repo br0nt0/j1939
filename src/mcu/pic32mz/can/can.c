@@ -113,6 +113,43 @@ static bool_t isTxFifoFull( picCANDriver_t driver, canFifo_t fifo )
     return ( driver->moduleRegs->canFifoRegisters[ fifo ].CxFIFOINT.bits.TXNFULLIF > 0u );
 }
 
+static bool_t wasErrorDetectedDuringTransmission( picCANDriver_t driver, canFifo_t fifo )
+{
+    return ( driver->moduleRegs->canFifoRegisters[ fifo ].CxFIFOCON.bits.TXERR > 0u );
+}
+
+static bool_t wasMessageAborted( picCANDriver_t driver, canFifo_t fifo )
+{
+    return ( driver->moduleRegs->canFifoRegisters[ fifo ].CxFIFOCON.bits.TXABAT > 0u );
+}
+
+static bool_t wasMessageArbitrationLost( picCANDriver_t driver, canFifo_t fifo )
+{
+    return ( driver->moduleRegs->canFifoRegisters[ fifo ].CxFIFOCON.bits.TXLARB > 0u );
+}
+
+static uint8_t getTxStatusByReadingErrorFlags( picCANDriver_t self, canFifo_t fifo )
+{
+    uint8_t status;
+    if ( wasErrorDetectedDuringTransmission( self, fifo ) )
+    {
+        status = CAN_TX_ERROR_DETECTED;
+    }
+    else if ( wasMessageAborted( self, fifo ) )
+    {
+        status = CAN_TX_MESSAGE_ABORTED;
+    }
+    else if ( wasMessageArbitrationLost( self, fifo ) )
+    {
+        status = CAN_TX_MESSAGE_ARBITRATION_LOST;
+    }
+    else
+    {
+        status = CAN_TX_SUCCEEDED;
+    }
+    return ( status );
+}
+
 static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
 {
     picCANDriver_t self = ( picCANDriver_t ) base;
@@ -123,7 +160,7 @@ static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
         loadMessageIntoBuffer( message, fifoBuffer );
         updateFifo( self, CAN_FIFO1 );
         flushTxFifo( self, CAN_FIFO1 );
-        status = CAN_TX_SUCCEEDED;
+        status = getTxStatusByReadingErrorFlags( self, CAN_FIFO1 );
     }
 
     return ( status );
