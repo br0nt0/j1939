@@ -11,7 +11,7 @@
 #include "drivers/CANDriver.h"
 
 /******************************************************************************/
-j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs );
+j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs, uint8_t* caName );
 
 
 

@@ -49,7 +49,7 @@ typedef struct aclStruct
 typedef aclStruct_t* acl_t;
 
 
-void configureAddressClaim( acl_t acl, canDriver_t driver, uint8_t* caName, uint8_t tickMs, int8_t state );
+void configureAddressClaim( acl_t acl, canDriver_t driver, int8_t state );
 void updateAddressClaimed( acl_t acl );
 bool_t wasAddressClaimedSuccessfuly( acl_t acl );
 void registerRequestForAddressClaim( acl_t acl );

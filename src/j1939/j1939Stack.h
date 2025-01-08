@@ -22,6 +22,7 @@ void setJ1939SourceAddress( j1939_t self, uint8_t address );
 uint8_t* getJ1939CAName( j1939_t self );
 void setJ1939CAName( j1939_t self, const uint8_t* caName );
 uint8_t getJ1939ConfiguredTickMs( j1939_t self );
+void updateJ1939CoreScheduler( j1939_t self );
 
 #include "j1939StackInterface.h"
 

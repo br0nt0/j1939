@@ -23,7 +23,9 @@ TEST_GROUP( addressClaimed )
 	void setup( void )
 	{
 		spyCanDriver = createCANDriverSpy( );
-		configureAddressClaim( &acl, spyCanDriver, caName, 10u, UNDEFINED );
+		acl.caName = caName;
+		acl.tickMs = 10u;
+		configureAddressClaim( &acl, spyCanDriver, UNDEFINED );
 		acl.sourceAddress = 0x01u;
 	}
 	void teardown( void )
@@ -127,10 +129,10 @@ TEST_GROUP( addressClaimed )
 	}
 };
 
-TEST( addressClaimed, given_null_item__when_configuring_address_claimed_procedure_then_nothing_happens )
+TEST( addressClaimed, given_null_item__when_configuring_address_claimed_procedure_then_state_is_undefined )
 {
 	// given
-	configureAddressClaim( NULL, spyCanDriver, caName, 10u, INIT );
+	configureAddressClaim( NULL, spyCanDriver, INIT );
 
 	// when
 
@@ -138,10 +140,10 @@ TEST( addressClaimed, given_null_item__when_configuring_address_claimed_procedur
 	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
 }
 
-TEST( addressClaimed, given_null_CAN_driver_when_configuring_address_claimed_procedure_then_nothing_happens )
+TEST( addressClaimed, given_null_CAN_driver_when_configuring_address_claimed_procedure_then_state_is_undefined )
 {
 	// given
-	configureAddressClaim( &acl, NULL, caName, 10u, INIT );
+	configureAddressClaim( &acl, NULL, INIT );
 
 	// when
 
@@ -149,10 +151,23 @@ TEST( addressClaimed, given_null_CAN_driver_when_configuring_address_claimed_pro
 	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
 }
 
-TEST( addressClaimed, given_null_CA_name_when_configuring_address_claimed_procedure_then_nothing_happens )
+TEST( addressClaimed, given_null_CA_name_when_configuring_address_claimed_procedure_then_state_is_undefined )
 {
 	// given
-	configureAddressClaim( &acl, spyCanDriver, NULL, 10u, INIT );
+	acl.caName = NULL;
+	configureAddressClaim( &acl, spyCanDriver, INIT );
+
+	// when
+
+	// then
+	UNSIGNED_LONGS_EQUAL( UNDEFINED, acl.state );
+}
+
+TEST( addressClaimed, given_zero_ticks_when_configuring_address_claimed_procedure_then_state_is_undefined )
+{
+	// given
+	acl.tickMs = 0u;
+	configureAddressClaim( &acl, spyCanDriver, INIT );
 
 	// when
 
@@ -177,7 +192,7 @@ TEST( addressClaimed, given_undefined_state_when_updating_address_claimed_proced
 TEST( addressClaimed, given_null__when_configuring_address_claimed_procedure_then_nothing_happens )
 {
 	// given
-	configureAddressClaim( NULL, NULL, NULL, 0, UNDEFINED );
+	configureAddressClaim( NULL, NULL, UNDEFINED );
 
 	// when
 	updateAddressClaimed( NULL );

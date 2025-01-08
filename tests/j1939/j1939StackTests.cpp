@@ -117,3 +117,13 @@ TEST( j1939Stack, given_null_stack_when_getting_configured_tick_then_zero_return
     // then
     UNSIGNED_LONGS_EQUAL( 0u, getJ1939ConfiguredTickMs( NULL ) );
 }
+
+TEST( j1939Stack, given_null_stack_when_updating_core_then_nothing_happens )
+{
+    // given
+
+    // when
+    updateJ1939CoreScheduler( NULL );
+
+    // then
+}

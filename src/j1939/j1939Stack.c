@@ -90,4 +90,12 @@ uint8_t getJ1939ConfiguredTickMs( j1939_t self )
     return ( tickMs );
 }
 
+void updateJ1939CoreScheduler( j1939_t self )
+{
+    if ( NULL != self )
+    {
+        self->iFace->updateCoreScheduler( self );
+    }
+}
+
 

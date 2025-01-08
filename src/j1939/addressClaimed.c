@@ -141,15 +141,25 @@ inline static void handleNormalTraffic( acl_t acl )
 	
 }
 
-/******************************************************************************/
-void configureAddressClaim( acl_t acl, canDriver_t driver, uint8_t* caName, uint8_t tickMs, int8_t state )
+static bool_t areNameAndTicksValid( uint8_t* caName, uint8_t tickMs )
 {
-	if ( acl && driver && caName )
+	return ( ( caName != NULL ) && ( tickMs > 0u ) );
+}
+
+/******************************************************************************/
+void configureAddressClaim( acl_t acl, canDriver_t driver, int8_t state )
+{
+	if ( acl && driver )
 	{
 		acl->driver = driver;
-		acl->caName = caName;
-		acl->tickMs = tickMs;
-		acl->state = state;
+		if ( areNameAndTicksValid( acl->caName, acl->tickMs ) )
+		{
+			acl->state = state;
+		}
+		else
+		{
+			acl->state = UNDEFINED;
+		}
 		acl->contentionCounterMs = acl->tickMs;
 		acl->wasAddressClaimed = false;
 		acl->wasRequestForACLReceived = false;

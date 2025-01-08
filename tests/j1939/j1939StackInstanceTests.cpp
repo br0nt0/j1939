@@ -12,16 +12,18 @@
 extern "C"
 {
 #include "j1939/j1939StackInstance.h"
+#include "j1939/addressClaimed.h"
 }
 
 TEST_GROUP( j1939StackInstance )
 {
     j1939_t stack;
     canDriver_t spyCAN;
+    uint8_t name[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
     void setup( void )
     {
         spyCAN = createCANDriverSpy( );
-        stack = createJ1939StackInstance( spyCAN, 10u );
+        stack = createJ1939StackInstance( spyCAN, 10u, name );
     }
     void teardown( void )
     {
@@ -43,6 +45,28 @@ TEST_GROUP( j1939StackInstance )
             .withPointerParameter( "data", data )
             .andReturnValue( CAN_TX_SUCCEEDED );
     }
+    void expectCANOperational( void )
+	{
+		mock( "CANSpy" ).expectOneCall( "isOperational" )
+			.withPointerParameter( "base", spyCAN )
+			.andReturnValue( true );
+	}
+    void expectOneCallToSendMessageWithAddressClaim( void )
+	{
+		canMessageStruct_t expectedCANMessage;
+        expectedCANMessage.id = 0x18eeff00u + getJ1939SourceAddress( stack );
+        expectedCANMessage.isExtended = true;
+		expectedCANMessage.dlc = 8u;
+        expectedCANMessage.data = getJ1939CAName( stack );
+        expectCANOperational( );
+		mock( "CANSpy" ).expectOneCall( "sendMessage" )
+			.withPointerParameter( "base", spyCAN )
+			.withUnsignedIntParameter( "id", expectedCANMessage.id )
+			.withBoolParameter( "isExtended", expectedCANMessage.isExtended )
+			.withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
+			.withPointerParameter( "data", expectedCANMessage.data )
+			.andReturnValue( CAN_TX_SUCCEEDED );
+	}
 };
 
 TEST( j1939StackInstance, given_a_j1939_stack_instance_then_it_can_be_created_and_destroyed )
@@ -59,7 +83,7 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_with_a_NULL_dirver_then_s
     // given
 
     // when
-    j1939_t testStack = createJ1939StackInstance( NULL, 1u );
+    j1939_t testStack = createJ1939StackInstance( NULL, 1u, name );
 
     // then
     CHECK_TRUE( NULL == testStack );
@@ -70,7 +94,18 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_with_a_zero_tick_then_sta
     // given
 
     // when
-    j1939_t testStack = createJ1939StackInstance( spyCAN, 0u );
+    j1939_t testStack = createJ1939StackInstance( spyCAN, 0u, name );
+
+    // then
+    CHECK_TRUE( NULL == testStack );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_with_null_NAME_then_stack_is_null )
+{
+    // given
+
+    // when
+    j1939_t testStack = createJ1939StackInstance( spyCAN, 1u, NULL );
 
     // then
     CHECK_TRUE( NULL == testStack );
@@ -170,5 +205,16 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_when_getting_configured_s
 
     // then
     UNSIGNED_LONGS_EQUAL( 10u, tickMs );
+}
+
+TEST( j1939StackInstance, given_a_j1939_stack_instance_when_updating_core_scheduler_then_address_claim_sent )
+{
+    // given
+    expectOneCallToSendMessageWithAddressClaim( );
+
+    // when
+    updateJ1939CoreScheduler( stack );
+
+    // then
 }
 
