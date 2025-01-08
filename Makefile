@@ -3,7 +3,7 @@
 BUILD_DIR = build
 TEST_BUILD_DIR := ${BUILD_DIR}/utest
 
-all: utest
+all: gcovr lizard
 
 ${TEST_BUILD_DIR}/Makefile:
 	cmake \

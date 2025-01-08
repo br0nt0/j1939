@@ -90,7 +90,13 @@
 			"addressclaimed.h": "c",
 			"candriver.h": "c",
 			"array": "cpp",
-			"string_view": "cpp"
+			"string_view": "cpp",
+			"can.h": "c",
+			"canregisterio.h": "c",
+			"canenumtypes.h": "c",
+			"cantypes.h": "c",
+			"candriverinterface.h": "c",
+			"canrxtxstructures.h": "c"
 		}
 	}
 }
