@@ -89,7 +89,21 @@ static uint8_t getConfiguredTickMs( j1939_t base )
 static void updateCoreScheduler( j1939_t base )
 {
     j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+
+    j1939Message_t message = receiveJ1939MessageFromCANDriver( stack->driver );
+
+    while ( NULL != message )
+    {
+        message = receiveJ1939MessageFromCANDriver( stack->driver );
+    }
     updateAddressClaimed( &stack->acl );
+}
+
+static bool_t wasAddressClaimed( j1939_t base )
+{
+    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+    bool_t wasClaimed = wasAddressClaimedSuccessfuly( &stack->acl );
+    return ( wasClaimed );
 }
 
 /******************************************************************************/
@@ -109,7 +123,8 @@ j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs, uint8_t* c
             setCAName,
             getCAName,
             getConfiguredTickMs,
-            updateCoreScheduler
+            updateCoreScheduler,
+            wasAddressClaimed
         };
 
         self = ( j1939StackInstance_t ) malloc( sizeof( j1939StackInstanceStruct_t ) );

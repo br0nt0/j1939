@@ -30,9 +30,9 @@ TEST_GROUP( j1939StackInstance )
         destroyJ1939Stack( stack );
         destroyCANDriver( spyCAN );
         mock( "CANSpy" ).checkExpectations( );
-		mock( ).clear( );
+        mock( ).clear( );
     }
-    void expectCANMessgeToSucceed( uint32_t id, bool_t isExtended, uint8_t dlc, uint8_t* data )
+    void expectCANMessgeToSucceed( uint32_t id, bool_t isExtended, uint8_t dlc, uint8_t * data )
     {
         mock( "CANSpy" ).expectOneCall( "isOperational" )
             .withPointerParameter( "base", spyCAN )
@@ -46,26 +46,38 @@ TEST_GROUP( j1939StackInstance )
             .andReturnValue( CAN_TX_SUCCEEDED );
     }
     void expectCANOperational( void )
-	{
-		mock( "CANSpy" ).expectOneCall( "isOperational" )
-			.withPointerParameter( "base", spyCAN )
-			.andReturnValue( true );
-	}
+    {
+        mock( "CANSpy" ).expectOneCall( "isOperational" )
+            .withPointerParameter( "base", spyCAN )
+            .andReturnValue( true );
+    }
     void expectOneCallToSendMessageWithAddressClaim( void )
-	{
-		canMessageStruct_t expectedCANMessage;
+    {
+        canMessageStruct_t expectedCANMessage;
         expectedCANMessage.id = 0x18eeff00u + getJ1939SourceAddress( stack );
         expectedCANMessage.isExtended = true;
-		expectedCANMessage.dlc = 8u;
+        expectedCANMessage.dlc = 8u;
         expectedCANMessage.data = getJ1939CAName( stack );
         expectCANOperational( );
-		mock( "CANSpy" ).expectOneCall( "sendMessage" )
+        mock( "CANSpy" ).expectOneCall( "sendMessage" )
+            .withPointerParameter( "base", spyCAN )
+            .withUnsignedIntParameter( "id", expectedCANMessage.id )
+            .withBoolParameter( "isExtended", expectedCANMessage.isExtended )
+            .withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
+            .withPointerParameter( "data", expectedCANMessage.data )
+            .andReturnValue( CAN_TX_SUCCEEDED );
+    }
+    void expectNReceivedNullMessages( uint8_t n )
+    {
+        mock( "CANSpy" ).expectNCalls( n,  "receiveMessage" )
+            .withPointerParameter( "base", spyCAN )
+            .andReturnValue( ( void* ) 0 );
+    }
+    void expectNTimesNoBusOff( uint8_t n )
+	{
+		mock( "CANSpy" ).expectNCalls( n, "isTxBusOffState" )
 			.withPointerParameter( "base", spyCAN )
-			.withUnsignedIntParameter( "id", expectedCANMessage.id )
-			.withBoolParameter( "isExtended", expectedCANMessage.isExtended )
-			.withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
-			.withPointerParameter( "data", expectedCANMessage.data )
-			.andReturnValue( CAN_TX_SUCCEEDED );
+			.andReturnValue( false );
 	}
 };
 
@@ -207,9 +219,10 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_when_getting_configured_s
     UNSIGNED_LONGS_EQUAL( 10u, tickMs );
 }
 
-TEST( j1939StackInstance, given_a_j1939_stack_instance_when_updating_core_scheduler_then_address_claim_sent )
+TEST( j1939StackInstance, given_no_received_messages_when_updating_core_scheduler_then_address_claim_message_sent )
 {
     // given
+    expectNReceivedNullMessages( 1u );
     expectOneCallToSendMessageWithAddressClaim( );
 
     // when
@@ -217,4 +230,35 @@ TEST( j1939StackInstance, given_a_j1939_stack_instance_when_updating_core_schedu
 
     // then
 }
+
+TEST( j1939StackInstance, given_2_messages_in_mailbox_but_no_acl_contention_for_more_than_250_ms_when_updating_core_scheduler_then_address_was_claimed )
+{
+    // given
+    uint8_t data[ 8 ] = { 3u, 4u, 5u, 6u, 7u, 8u, 9u, 1u };
+    canMessageStruct_t canMessage;
+    canMessage.id = 0x14fb8caau;
+    canMessage.isExtended = true;
+    canMessage.dlc = 8u;
+    canMessage.data = data;
+    mock( "CANSpy" ).expectNCalls( 2, "receiveMessage" )
+        .withPointerParameter( "base", spyCAN )
+        .andReturnValue( &canMessage );
+
+    uint8_t howManyUpdatesIn250Ms = ( uint8_t ) ( 250u / getJ1939ConfiguredTickMs( stack ) );
+
+    expectNReceivedNullMessages( howManyUpdatesIn250Ms + 1u );
+    expectNTimesNoBusOff( howManyUpdatesIn250Ms );
+    expectOneCallToSendMessageWithAddressClaim( );
+
+    // when
+    for ( uint8_t i = 0u; i < ( howManyUpdatesIn250Ms + 1u ); i++ )
+    {
+        updateJ1939CoreScheduler( stack );
+    }
+
+    // then
+    CHECK_TRUE( wasJ1939AddressClaimed( stack ) );
+}
+
+
 

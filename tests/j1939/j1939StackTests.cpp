@@ -127,3 +127,13 @@ TEST( j1939Stack, given_null_stack_when_updating_core_then_nothing_happens )
 
     // then
 }
+
+TEST( j1939Stack, given_null_stack_when_checking_for_address_claimed_then_false_returned )
+{
+    // given
+
+    // when
+
+    // then
+    CHECK_FALSE( wasJ1939AddressClaimed( NULL ) );
+}

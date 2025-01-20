@@ -37,6 +37,7 @@ typedef struct j1939InterfaceStruct
     uint8_t* ( *getCAName )( j1939_t );
     uint8_t( *getTickMs )( j1939_t );
     void ( *updateCoreScheduler )( j1939_t );
+    bool_t( *wasAddressClaimed )( j1939_t );
 }j1939InterfaceStruct_t;
 
 /******************************************************************************/

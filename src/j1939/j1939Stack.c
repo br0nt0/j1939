@@ -98,4 +98,13 @@ void updateJ1939CoreScheduler( j1939_t self )
     }
 }
 
+bool_t wasJ1939AddressClaimed( j1939_t self )
+{
+    bool_t wasAddressClaimed = false;
+    if ( NULL != self )
+    {
+        wasAddressClaimed = self->iFace->wasAddressClaimed( self );
+    }
+    return ( wasAddressClaimed );
+}
 
