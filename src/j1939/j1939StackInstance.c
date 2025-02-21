@@ -135,7 +135,8 @@ j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs, uint8_t* c
         self->acl.caName = caName;
         self->tickMs = tickMs;
         self->acl.tickMs = tickMs;
-        configureAddressClaim( &self->acl, self->driver, INIT );
+        self->acl.driver = self->driver;
+        setAddressClaimInitialState( &self->acl, INIT );
     }
 
     return ( ( j1939_t ) self );

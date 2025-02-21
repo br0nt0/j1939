@@ -147,11 +147,10 @@ static bool_t areNameAndTicksValid( uint8_t* caName, uint8_t tickMs )
 }
 
 /******************************************************************************/
-void configureAddressClaim( acl_t acl, canDriver_t driver, int8_t state )
+void setAddressClaimInitialState( acl_t acl, int8_t state )
 {
-	if ( acl && driver )
+	if ( acl && acl->driver )
 	{
-		acl->driver = driver;
 		if ( areNameAndTicksValid( acl->caName, acl->tickMs ) )
 		{
 			acl->state = state;

@@ -25,7 +25,8 @@ TEST_GROUP( addressClaimed )
 		spyCanDriver = createCANDriverSpy( );
 		acl.caName = caName;
 		acl.tickMs = 10u;
-		configureAddressClaim( &acl, spyCanDriver, UNDEFINED );
+		acl.driver = spyCanDriver;
+		setAddressClaimInitialState( &acl, UNDEFINED );
 		acl.sourceAddress = 0x01u;
 	}
 	void teardown( void )
@@ -132,7 +133,7 @@ TEST_GROUP( addressClaimed )
 TEST( addressClaimed, given_null_item__when_configuring_address_claimed_procedure_then_state_is_undefined )
 {
 	// given
-	configureAddressClaim( NULL, spyCanDriver, INIT );
+	setAddressClaimInitialState( NULL, INIT );
 
 	// when
 
@@ -143,7 +144,8 @@ TEST( addressClaimed, given_null_item__when_configuring_address_claimed_procedur
 TEST( addressClaimed, given_null_CAN_driver_when_configuring_address_claimed_procedure_then_state_is_undefined )
 {
 	// given
-	configureAddressClaim( &acl, NULL, INIT );
+	acl.driver = NULL;
+	setAddressClaimInitialState( &acl, INIT );
 
 	// when
 
@@ -155,7 +157,7 @@ TEST( addressClaimed, given_null_CA_name_when_configuring_address_claimed_proced
 {
 	// given
 	acl.caName = NULL;
-	configureAddressClaim( &acl, spyCanDriver, INIT );
+	setAddressClaimInitialState( &acl, INIT );
 
 	// when
 
@@ -167,7 +169,7 @@ TEST( addressClaimed, given_zero_ticks_when_configuring_address_claimed_procedur
 {
 	// given
 	acl.tickMs = 0u;
-	configureAddressClaim( &acl, spyCanDriver, INIT );
+	setAddressClaimInitialState( &acl, INIT );
 
 	// when
 
@@ -192,7 +194,8 @@ TEST( addressClaimed, given_undefined_state_when_updating_address_claimed_proced
 TEST( addressClaimed, given_null__when_configuring_address_claimed_procedure_then_nothing_happens )
 {
 	// given
-	configureAddressClaim( NULL, NULL, UNDEFINED );
+	acl.driver = NULL;
+	setAddressClaimInitialState( NULL, UNDEFINED );
 
 	// when
 	updateAddressClaimed( NULL );
