@@ -96,7 +96,9 @@
 			"canenumtypes.h": "c",
 			"cantypes.h": "c",
 			"candriverinterface.h": "c",
-			"canrxtxstructures.h": "c"
+			"canrxtxstructures.h": "c",
+			"iaddressclaimed.h": "c",
+			"addressclaimedimpl.h": "c"
 		}
 	}
 }
