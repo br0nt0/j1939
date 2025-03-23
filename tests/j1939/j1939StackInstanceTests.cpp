@@ -12,7 +12,7 @@
 extern "C"
 {
 #include "j1939/j1939StackInstance.h"
-#include "j1939/addressClaimed.h"
+#include "j1939/addressClaimedImpl.h"
 }
 
 TEST_GROUP( j1939StackInstance )

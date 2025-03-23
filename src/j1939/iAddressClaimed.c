@@ -14,7 +14,7 @@ void destroyACL( acl_t acl )
 {
     if ( acl != NULL )
     {
-        
+        acl->iFace->destroy( acl );
     }
 }
 
@@ -31,7 +31,7 @@ bool_t wasACLSuccessful( acl_t acl )
     bool_t wasSuccessful = false;
     if ( acl != NULL )
     {
-        
+        wasSuccessful = acl->iFace->wasAddressClaimed( acl );
     }
     return ( wasSuccessful );
 }
@@ -40,7 +40,7 @@ void registerRequestForACL( acl_t acl )
 {
     if ( acl != NULL )
     {
-        
+        acl->iFace->registerReqForACL( acl );
     }
 }
 
@@ -48,25 +48,23 @@ void registerRcvMessageWithOwnSourceAddress( acl_t acl )
 {
     if ( acl != NULL )
     {
-        
+        acl->iFace->registerMessageWOwnSA( acl );
     }
 }
 
 void registerACLContention( acl_t acl, const uint8_t* name )
 {
-    ( void ) name;
     if ( acl != NULL )
     {
-        
+        acl->iFace->registerContention( acl, name );
     }
 }
 
-void setCAName( acl_t acl, const uint8_t* name )
+void setCAName( acl_t acl, uint8_t* name )
 {
-    ( void ) name;
     if ( acl != NULL )
     {
-        
+        acl->iFace->setName( acl, name );
     }
 }
 
@@ -82,10 +80,9 @@ uint8_t* getCAName( acl_t acl )
 
 void setSourceAddress( acl_t acl, uint8_t sourceAddress )
 {
-    ( void ) sourceAddress;
     if ( acl != NULL )
     {
-        
+        acl->iFace->setSA( acl, sourceAddress );
     }
 }
 

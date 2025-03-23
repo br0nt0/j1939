@@ -208,6 +208,12 @@ static void updateStateMachine( acl_t super )
     }
 }
 
+static void destroy( acl_t super )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    free( self );
+}
+
 static uint8_t* getName( acl_t super )
 {
     aclImpl_t self = ( aclImpl_t ) super;
@@ -220,6 +226,45 @@ static uint8_t getSA( acl_t super )
     return ( self->sourceAddress );
 }
 
+static bool_t wasAddressClaimed( acl_t super )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    return ( self->wasAddressClaimed );
+}
+
+static void registerContention( acl_t super, const uint8_t* caName )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    for ( uint8_t i = 0u; i < 8u; i++ )
+	{
+		self->contenderName[ i ] = caName[ i ];
+	}
+	self->wasContentionReceived = true;
+}
+
+static void registerReqForACL( acl_t super )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    self->wasRequestForACLReceived = true;
+}
+
+static void setSA( acl_t super, uint8_t sourceAddress )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    self->sourceAddress = sourceAddress;
+}
+
+static void registerRcvMessageWithOwnSA( acl_t super )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    self->wasMessageWithOwnSAReceived = true;
+}
+
+static void setName( acl_t super, uint8_t* name )
+{
+    aclImpl_t self = ( aclImpl_t ) super;
+    self->caName = name;
+}
 
 /******************************************************************************/
 acl_t createAddressClaimed( canDriver_t driver, uint16_t ticksMS, uint8_t* caName, uint8_t sourceAddress )
@@ -227,15 +272,15 @@ acl_t createAddressClaimed( canDriver_t driver, uint16_t ticksMS, uint8_t* caNam
     aclImpl_t self = NULL;
 
     static aclInterfaceStruct_t interface = {
-        NULL,
+        destroy,
         updateStateMachine,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
+        wasAddressClaimed,
+        registerReqForACL,
+        registerRcvMessageWithOwnSA,
+        registerContention,
+        setName,
         getName,
-        NULL,
+        setSA,
         getSA
     };
 
@@ -265,4 +310,10 @@ void setACLStateMachineState( acl_t acl, int8_t state )
 {
     aclImpl_t self = ( aclImpl_t ) acl;
     self->state = state;
+}
+
+int8_t getACLStateMachineState( acl_t acl )
+{
+    aclImpl_t self = ( aclImpl_t ) acl;
+    return ( self->state );
 }
