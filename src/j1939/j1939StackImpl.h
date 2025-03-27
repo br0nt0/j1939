@@ -1,18 +1,16 @@
 /*******************************************************************************
- * @file	j1939StackInstance.h
- * @brief	
+ * @file	j1939StackImpl.h
+ * @brief	J1939 stack implementation
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
-#ifndef J1939STACKINSTANCE_H_
-#define J1939STACKINSTANCE_H_
+#ifndef J1939STACKIMPL_H_
+#define J1939STACKIMPL_H_
 /******************************************************************************/
-#include "j1939/j1939Stack.h"
+#include "j1939/iJ1939Stack.h"
 #include "drivers/CANDriver.h"
 
 /******************************************************************************/
-j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs, uint8_t* caName );
+j1939_t createJ1939StackImpl( canDriver_t driver, uint8_t tickMs, uint8_t* caName );
 
-
-
-#endif /* J1939STACKINSTANCE_H_ */
+#endif /* J1939STACKIMPL_H_ */

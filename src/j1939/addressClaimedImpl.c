@@ -23,7 +23,7 @@ struct aclImplStruct
 	uint8_t contentionCounterMs;
 	uint8_t pseudoDelay;
 	uint8_t tickMs;
-	int8_t state;
+	uint8_t state;
 	uint8_t* caName;
 	uint8_t contenderName[ 8 ];
 };
@@ -271,21 +271,21 @@ acl_t createAddressClaimed( canDriver_t driver, uint16_t ticksMS, uint8_t* caNam
 {
     aclImpl_t self = NULL;
 
-    static aclInterfaceStruct_t interface = {
-        destroy,
-        updateStateMachine,
-        wasAddressClaimed,
-        registerReqForACL,
-        registerRcvMessageWithOwnSA,
-        registerContention,
-        setName,
-        getName,
-        setSA,
-        getSA
-    };
-
     if ( driver && ( ticksMS > 0u ) && caName )
     {
+        static aclInterfaceStruct_t interface = {
+            destroy,
+            updateStateMachine,
+            wasAddressClaimed,
+            registerReqForACL,
+            registerRcvMessageWithOwnSA,
+            registerContention,
+            setName,
+            getName,
+            setSA,
+            getSA
+        };
+        
         self = ( aclImpl_t ) malloc( sizeof( struct aclImplStruct ) );
         self->base.iFace = &interface;
         self->base.type = "ACLv1";
@@ -306,13 +306,13 @@ acl_t createAddressClaimed( canDriver_t driver, uint16_t ticksMS, uint8_t* caNam
     return ( ( acl_t ) self );
 }
 
-void setACLStateMachineState( acl_t acl, int8_t state )
+void setACLStateMachineState( acl_t acl, uint8_t state )
 {
     aclImpl_t self = ( aclImpl_t ) acl;
     self->state = state;
 }
 
-int8_t getACLStateMachineState( acl_t acl )
+uint8_t getACLStateMachineState( acl_t acl )
 {
     aclImpl_t self = ( aclImpl_t ) acl;
     return ( self->state );

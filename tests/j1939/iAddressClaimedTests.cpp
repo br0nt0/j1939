@@ -107,10 +107,10 @@ TEST( iAddressClaimed, given_null_input_when_setting_and_getting_the_source_addr
     // given
 
     // when
-    setSourceAddress( NULL, 1u );
+    setACLSourceAddress( NULL, 1u );
 
     // then
-    UNSIGNED_LONGS_EQUAL( 0xfeu, getSourceAddress( NULL ) );
+    UNSIGNED_LONGS_EQUAL( 0xfeu, getACLSourceAddress( NULL ) );
 }
 
 TEST( iAddressClaimed, given_a_test_procedure_when_checking_accessors_then_it_is_returned )

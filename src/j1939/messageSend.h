@@ -7,7 +7,7 @@
 #ifndef MESSAGESEND_H_
 #define MESSAGESEND_H_
 /******************************************************************************/
-#include "j1939Stack.h"
+#include "iJ1939Stack.h"
 #include "drivers/CANDriver.h"
 
 /******************************************************************************/

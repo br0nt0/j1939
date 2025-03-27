@@ -1,18 +1,18 @@
 /*******************************************************************************
- * @file	j1939StackInstance.c
+ * @file	j1939StackImpl.c
  * @brief
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
-#include "j1939StackInstance.h"
+#include "j1939StackImpl.h"
 #include "j1939/messageSend.h"
 #include "j1939/messageReceive.h"
 #include "j1939/addressClaimedImpl.h"
 
 /******************************************************************************/
-typedef struct j1939StackInstanceStruct* j1939StackInstance_t;
+typedef struct j1939StackImplStruct* j1939StackImpl_t;
 
-typedef struct j1939StackInstanceStruct
+typedef struct j1939StackImplStruct
 {
     j1939Struct_t base;
     canDriver_t driver;
@@ -24,14 +24,14 @@ typedef struct j1939StackInstanceStruct
 /******************************************************************************/
 static void destroy( j1939_t base )
 {
-    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
     destroyACL( stack->acl );
     free( stack );
 }
 
 static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
 {
-    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
 
     uint8_t status = sendJ1939MessageToCANDriver( message, stack->driver );
     return ( status );
@@ -39,7 +39,7 @@ static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
 
 static j1939Message_t receiveMessage( j1939_t base )
 {
-    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
 
     j1939Message_t message = receiveJ1939MessageFromCANDriver( stack->driver );
 
@@ -48,19 +48,19 @@ static j1939Message_t receiveMessage( j1939_t base )
 
 static void setSA( j1939_t super, uint8_t address )
 {
-    j1939StackInstance_t self = ( j1939StackInstance_t ) super;
-    setSourceAddress( self->acl, address );
+    j1939StackImpl_t self = ( j1939StackImpl_t ) super;
+    setACLSourceAddress( self->acl, address );
 }
 
 static uint8_t getSA( j1939_t base )
 {
-    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
-    return ( getSourceAddress( stack->acl ) );
+    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
+    return ( getACLSourceAddress( stack->acl ) );
 }
 
 static void setName( j1939_t super, const uint8_t* caName )
 {
-    j1939StackInstance_t self = ( j1939StackInstance_t ) super;
+    j1939StackImpl_t self = ( j1939StackImpl_t ) super;
     if ( caName != NULL )
     {
         for ( uint8_t i = 0u; i < 8u; i++ )
@@ -77,19 +77,19 @@ static void setName( j1939_t super, const uint8_t* caName )
 
 static uint8_t* getName( j1939_t super )
 {
-    j1939StackInstance_t self = ( j1939StackInstance_t ) super;
+    j1939StackImpl_t self = ( j1939StackImpl_t ) super;
     return ( getCAName( self->acl ) );
 }
 
 static uint8_t getConfiguredTickMs( j1939_t base )
 {
-    j1939StackInstance_t stack = ( j1939StackInstance_t ) base;
+    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
     return ( stack->tickMs );
 }
 
 static void updateCoreScheduler( j1939_t super )
 {
-    j1939StackInstance_t self = ( j1939StackInstance_t ) super;
+    j1939StackImpl_t self = ( j1939StackImpl_t ) super;
 
     j1939Message_t message = receiveJ1939MessageFromCANDriver( self->driver );
 
@@ -102,14 +102,14 @@ static void updateCoreScheduler( j1939_t super )
 
 static bool_t wasAddressClaimed( j1939_t super )
 {
-    j1939StackInstance_t self = ( j1939StackInstance_t ) super;
+    j1939StackImpl_t self = ( j1939StackImpl_t ) super;
     return  ( wasACLSuccessful( self->acl ) );
 }
 
 /******************************************************************************/
-j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs, uint8_t* caName )
+j1939_t createJ1939StackImpl( canDriver_t driver, uint8_t tickMs, uint8_t* caName )
 {
-    j1939StackInstance_t self = NULL;
+    j1939StackImpl_t self = NULL;
 
     if ( ( NULL != driver ) && ( tickMs > 0u ) && ( NULL != caName ) )
     {
@@ -127,7 +127,7 @@ j1939_t createJ1939StackInstance( canDriver_t driver, uint8_t tickMs, uint8_t* c
             wasAddressClaimed
         };
 
-        self = ( j1939StackInstance_t ) malloc( sizeof( j1939StackInstanceStruct_t ) );
+        self = ( j1939StackImpl_t ) malloc( sizeof( j1939StackInstanceStruct_t ) );
         self->base.iFace = &interface;
         self->base.type = "J1939Stack";
         self->driver = driver;

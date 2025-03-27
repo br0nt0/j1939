@@ -7,7 +7,7 @@
 #ifndef MESSAGERECEIVE_H_
 #define MESSAGERECEIVE_H_
 /******************************************************************************/
-#include "j1939Stack.h"
+#include "iJ1939Stack.h"
 #include "drivers/CANDriver.h"
 
 /******************************************************************************/

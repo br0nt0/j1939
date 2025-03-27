@@ -45,7 +45,7 @@ TEST_GROUP( addressClaimedImpl )
     void expectOneCallToSendMessageWithAddressClaim( void )
 	{
 		canMessageStruct_t expectedCANMessage;
-        expectedCANMessage.id = 0x18eeff00u + getSourceAddress( acl );
+        expectedCANMessage.id = 0x18eeff00u + getACLSourceAddress( acl );
         expectedCANMessage.isExtended = true;
 		expectedCANMessage.dlc = 8u;
         expectedCANMessage.data = getCAName( acl );
@@ -61,7 +61,7 @@ TEST_GROUP( addressClaimedImpl )
     void expectOneCallToSendMessageWithTxBufferFull( void )
 	{
 		canMessageStruct_t expectedCANMessage;
-		expectedCANMessage.id = 0x18eeff00u + getSourceAddress( acl );
+		expectedCANMessage.id = 0x18eeff00u + getACLSourceAddress( acl );
 		expectedCANMessage.isExtended = true;
 		expectedCANMessage.dlc = 8u;
 		expectedCANMessage.data = getCAName( acl );
@@ -303,7 +303,7 @@ TEST( addressClaimedImpl, given_a_contending_message_with_name_equal_to_mine_whe
     updateACLStateMachine( acl );
 
     // then
-    UNSIGNED_LONGS_EQUAL( 128, getSourceAddress( acl ) );
+    UNSIGNED_LONGS_EQUAL( 128, getACLSourceAddress( acl ) );
 }
 
 TEST( addressClaimedImpl, given_contention_and_no_available_address_when_prioritizing_contention_then_cannot_claim_message_sent )
@@ -324,7 +324,7 @@ TEST( addressClaimedImpl, given_contention_and_no_available_address_when_priorit
 
     // then
     UNSIGNED_LONGS_EQUAL( CANNOT_CLAIM_ADDRESS, getACLStateMachineState( acl ) );
-    UNSIGNED_LONGS_EQUAL( 254u, getSourceAddress( acl ) );
+    UNSIGNED_LONGS_EQUAL( 254u, getACLSourceAddress( acl ) );
 }
 
 TEST( addressClaimedImpl, given_a_request_for_address_claim_when_cannot_claim_address_then_a_pseudo_delay_is_applied_before_sending_a_cannot_claim_messge )
@@ -332,7 +332,7 @@ TEST( addressClaimedImpl, given_a_request_for_address_claim_when_cannot_claim_ad
     // given
     setACLStateMachineState( acl, CANNOT_CLAIM_ADDRESS );
     registerRequestForACL( acl );
-    setSourceAddress( acl, 254u );
+    setACLSourceAddress( acl, 254u );
 
     uint16_t pseudoDelay = createPseudoDelay( caName, ticksMs );
     expectCannotClaimMessge( );
@@ -348,7 +348,7 @@ TEST( addressClaimedImpl, given_a_request_for_address_claim_when_cannot_claim_ad
 
     // then
     UNSIGNED_LONGS_EQUAL( CANNOT_CLAIM_ADDRESS, getACLStateMachineState( acl ) );
-    UNSIGNED_LONGS_EQUAL( 254u, getSourceAddress( acl ) );
+    UNSIGNED_LONGS_EQUAL( 254u, getACLSourceAddress( acl ) );
 }
 
 TEST( addressClaimedImpl, given_a_request_for_address_claim_when_in_normal_traffic_state_then_address_claim_message_is_sent )
@@ -443,7 +443,7 @@ TEST( addressClaimedImpl, given_a_contention_with_name_equal_to_mine_when_in_nor
 
     // then
     UNSIGNED_LONGS_EQUAL( NORMAL_TRAFFIC, getACLStateMachineState( acl ) );
-    UNSIGNED_LONGS_EQUAL( 128u, getSourceAddress( acl ) );
+    UNSIGNED_LONGS_EQUAL( 128u, getACLSourceAddress( acl ) );
 }
 
 TEST( addressClaimedImpl, given_a_CA_name_then_it_can_be_set_and_get )

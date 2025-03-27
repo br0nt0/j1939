@@ -13,8 +13,7 @@
 
 enum
 {
-    UNDEFINED = -1,
-    INIT = 0,
+    INIT = 0u,
     WAIT_FOR_CONTENTION,
     NORMAL_TRAFFIC,
     DELAY_BEFORE_RECLAIM,
@@ -31,7 +30,7 @@ enum
 
 /******************************************************************************/
 acl_t createAddressClaimed( canDriver_t driver, uint16_t ticksMS, uint8_t* caName, uint8_t sourceAddress );
-void setACLStateMachineState( acl_t acl, int8_t state );
-int8_t getACLStateMachineState( acl_t acl );
+void setACLStateMachineState( acl_t acl, uint8_t state );
+uint8_t getACLStateMachineState( acl_t acl );
 
 #endif /* ADDRESSCLAIMEDIMPL_H_ */

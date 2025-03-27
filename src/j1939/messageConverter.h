@@ -9,7 +9,7 @@
 /******************************************************************************/
 #include "commonTypes.h"
 #include "drivers/CANDriver.h"
-#include "j1939Stack.h"
+#include "iJ1939Stack.h"
 
 /******************************************************************************/
 void encodeCANMessage( canMessage_t canMessage, const j1939Message_t j1939Message );

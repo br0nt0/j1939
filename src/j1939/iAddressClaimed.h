@@ -41,8 +41,8 @@ void registerRcvMessageWithOwnSourceAddress( acl_t acl );
 void registerACLContention( acl_t acl, const uint8_t* name );
 void setCAName( acl_t acl, uint8_t* name );
 uint8_t* getCAName( acl_t acl );
-void setSourceAddress( acl_t acl, uint8_t sourceAddress );
-uint8_t getSourceAddress( acl_t acl );
+void setACLSourceAddress( acl_t acl, uint8_t sourceAddress );
+uint8_t getACLSourceAddress( acl_t acl );
 const char* getACLType( acl_t acl );
 
 #endif /* IADDRESSCLAIMED_H_ */

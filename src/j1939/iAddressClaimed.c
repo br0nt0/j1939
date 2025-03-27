@@ -78,7 +78,7 @@ uint8_t* getCAName( acl_t acl )
     return ( caName );
 }
 
-void setSourceAddress( acl_t acl, uint8_t sourceAddress )
+void setACLSourceAddress( acl_t acl, uint8_t sourceAddress )
 {
     if ( acl != NULL )
     {
@@ -86,7 +86,7 @@ void setSourceAddress( acl_t acl, uint8_t sourceAddress )
     }
 }
 
-uint8_t getSourceAddress( acl_t acl )
+uint8_t getACLSourceAddress( acl_t acl )
 {
     uint8_t sourceAddress = 0xfeu;
     if ( acl != NULL )

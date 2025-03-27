@@ -98,7 +98,9 @@
 			"candriverinterface.h": "c",
 			"canrxtxstructures.h": "c",
 			"iaddressclaimed.h": "c",
-			"addressclaimedimpl.h": "c"
+			"addressclaimedimpl.h": "c",
+			"j1939stackimpl.h": "c",
+			"j1939message.h": "c"
 		}
 	}
 }

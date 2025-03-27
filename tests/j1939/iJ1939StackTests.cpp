@@ -9,10 +9,10 @@
 
 extern "C"
 {
-#include "j1939/j1939Stack.h"
+#include "j1939/iJ1939Stack.h"
 }
 
-TEST_GROUP( j1939Stack )
+TEST_GROUP( iJ1939Stack )
 {
     void setup( void )
     {
@@ -22,7 +22,7 @@ TEST_GROUP( j1939Stack )
     }
 };
 
-TEST( j1939Stack, given_null_stack_when_sending_j1939_message_then_no_seg_fault )
+TEST( iJ1939Stack, given_null_stack_when_sending_j1939_message_then_no_seg_fault )
 {
     // given
 
@@ -33,7 +33,7 @@ TEST( j1939Stack, given_null_stack_when_sending_j1939_message_then_no_seg_fault 
     UNSIGNED_LONGS_EQUAL( 1u, result );
 }
 
-TEST( j1939Stack, given_a_stack_description_when_accessing_the_interface_then_it_is_returned )
+TEST( iJ1939Stack, given_a_stack_description_when_accessing_the_interface_then_it_is_returned )
 {
     // given
     struct j1939Struct testStack = { NULL, "Test Stack" };
@@ -44,7 +44,7 @@ TEST( j1939Stack, given_a_stack_description_when_accessing_the_interface_then_it
     STRCMP_EQUAL( "Test Stack", getJ1939StackType( &testStack ) );
 }
 
-TEST( j1939Stack, given_null_stack_when_destroying_the_stack_then_no_seg_fault )
+TEST( iJ1939Stack, given_null_stack_when_destroying_the_stack_then_no_seg_fault )
 {
     // given
 
@@ -54,7 +54,7 @@ TEST( j1939Stack, given_null_stack_when_destroying_the_stack_then_no_seg_fault )
     // then
 }
 
-TEST( j1939Stack, given_null_stack_when_receiving_a_j1939_message_then_no_seg_fault )
+TEST( iJ1939Stack, given_null_stack_when_receiving_a_j1939_message_then_no_seg_fault )
 {
     // given
 
@@ -65,7 +65,7 @@ TEST( j1939Stack, given_null_stack_when_receiving_a_j1939_message_then_no_seg_fa
     CHECK_TRUE( NULL == message );
 }
 
-TEST( j1939Stack, given_null_stack_when_getting_stack_source_address_then_0xff_returned )
+TEST( iJ1939Stack, given_null_stack_when_getting_stack_source_address_then_0xff_returned )
 {
     // given
 
@@ -76,7 +76,7 @@ TEST( j1939Stack, given_null_stack_when_getting_stack_source_address_then_0xff_r
     UNSIGNED_LONGS_EQUAL( 0xffu, sourceAddress );
 }
 
-TEST( j1939Stack, given_null_stack_when_setting_stack_source_address_then_noting_happens )
+TEST( iJ1939Stack, given_null_stack_when_setting_stack_source_address_then_noting_happens )
 {
     // given
 
@@ -86,7 +86,7 @@ TEST( j1939Stack, given_null_stack_when_setting_stack_source_address_then_noting
     // then
 }
 
-TEST( j1939Stack, given_null_stack_when_getting_stack_CA_name_then_null_returned )
+TEST( iJ1939Stack, given_null_stack_when_getting_stack_CA_name_then_null_returned )
 {
     // given
 
@@ -97,7 +97,7 @@ TEST( j1939Stack, given_null_stack_when_getting_stack_CA_name_then_null_returned
     CHECK_TRUE( NULL == caName );
 }
 
-TEST( j1939Stack, given_null_stack_when_setting_CA_name_then_noting_happens )
+TEST( iJ1939Stack, given_null_stack_when_setting_CA_name_then_noting_happens )
 {
     // given
     uint8_t caName[ 8 ] = { 0x11u, 0x22u, 0x33u, 0x44u, 0x55u, 0x66u, 0x77u, 0x88u };
@@ -108,7 +108,7 @@ TEST( j1939Stack, given_null_stack_when_setting_CA_name_then_noting_happens )
     // then
 }
 
-TEST( j1939Stack, given_null_stack_when_getting_configured_tick_then_zero_returned )
+TEST( iJ1939Stack, given_null_stack_when_getting_configured_tick_then_zero_returned )
 {
     // given
 
@@ -118,7 +118,7 @@ TEST( j1939Stack, given_null_stack_when_getting_configured_tick_then_zero_return
     UNSIGNED_LONGS_EQUAL( 0u, getJ1939ConfiguredTickMs( NULL ) );
 }
 
-TEST( j1939Stack, given_null_stack_when_updating_core_then_nothing_happens )
+TEST( iJ1939Stack, given_null_stack_when_updating_core_then_nothing_happens )
 {
     // given
 
@@ -128,7 +128,7 @@ TEST( j1939Stack, given_null_stack_when_updating_core_then_nothing_happens )
     // then
 }
 
-TEST( j1939Stack, given_null_stack_when_checking_for_address_claimed_then_false_returned )
+TEST( iJ1939Stack, given_null_stack_when_checking_for_address_claimed_then_false_returned )
 {
     // given
 
