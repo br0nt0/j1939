@@ -8,21 +8,10 @@
 #define IJ1939STACK_H_
 /******************************************************************************/
 #include "commonTypes.h"
+#include "j1939Message.h"
 
 typedef struct j1939Struct* j1939_t;
-typedef struct j1939MessageStruct* j1939Message_t;
 typedef struct j1939InterfaceStruct* j1939Interface_t;
-
-typedef struct j1939MessageStruct
-{
-    uint32_t parameterGroupNumber;
-    uint16_t dataSize;
-    uint8_t priority;
-    uint8_t sourceAddress;
-    uint8_t destinationAddress;
-    uint8_t* data;
-}j1939MessageStruct_t;
-
 typedef struct j1939Struct
 {
     j1939Interface_t iFace;

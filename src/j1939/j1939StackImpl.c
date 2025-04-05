@@ -33,7 +33,7 @@ static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
 {
     j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
 
-    uint8_t status = sendJ1939MessageToCANDriver( message, stack->driver );
+    uint8_t status = sendJ1939MessageToDriver( message, stack->driver );
     return ( status );
 }
 
@@ -41,7 +41,7 @@ static j1939Message_t receiveMessage( j1939_t base )
 {
     j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
 
-    j1939Message_t message = receiveJ1939MessageFromCANDriver( stack->driver );
+    j1939Message_t message = receiveJ1939MessageFromDriver( stack->driver );
 
     return ( message );
 }
@@ -91,11 +91,11 @@ static void updateCoreScheduler( j1939_t super )
 {
     j1939StackImpl_t self = ( j1939StackImpl_t ) super;
 
-    j1939Message_t message = receiveJ1939MessageFromCANDriver( self->driver );
+    j1939Message_t message = receiveJ1939MessageFromDriver( self->driver );
 
     while ( NULL != message )
     {
-        message = receiveJ1939MessageFromCANDriver( self->driver );
+        message = receiveJ1939MessageFromDriver( self->driver );
     }
     updateACLStateMachine( self->acl );
 }

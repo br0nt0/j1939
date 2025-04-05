@@ -100,7 +100,9 @@
 			"iaddressclaimed.h": "c",
 			"addressclaimedimpl.h": "c",
 			"j1939stackimpl.h": "c",
-			"j1939message.h": "c"
+			"j1939message.h": "c",
+			"ij1939stack.h": "c",
+			"memory": "cpp"
 		}
 	}
 }

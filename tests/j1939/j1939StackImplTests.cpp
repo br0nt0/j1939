@@ -20,6 +20,7 @@ TEST_GROUP( j1939StackImpl )
     j1939_t stack;
     canDriver_t spyCAN;
     uint8_t name[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
+    j1939Message_t testMessage = NULL;
     void setup( void )
     {
         spyCAN = createCANDriverSpy( );
@@ -29,6 +30,7 @@ TEST_GROUP( j1939StackImpl )
     {
         destroyJ1939Stack( stack );
         destroyCANDriver( spyCAN );
+        destroyJ1939Message( testMessage );
         mock( "CANSpy" ).checkExpectations( );
         mock( ).clear( );
     }
@@ -127,20 +129,14 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_when_sending_a_message_then_C
 {
     // given
     uint8_t data[ 8 ] = { 11u, 22u, 33u, 44u, 55u, 66u, 77u, 88u };
-    j1939MessageStruct_t testMessage;
-    testMessage.parameterGroupNumber = 0xfe44u;
-    testMessage.priority = 7u;
-    testMessage.sourceAddress = 0x0au;
-    testMessage.destinationAddress = 0x0bu;
-    testMessage.dataSize = 8u;
-    testMessage.data = data;
+    testMessage = createJ1939Message( 0xfe44u, 7u, 0x0bu, 0x0au, data, 8u );
 
-    expectCANMessgeToSucceed( ( testMessage.priority << 26u ) + ( testMessage.parameterGroupNumber << 8u ) + ( testMessage.sourceAddress ),
+    expectCANMessgeToSucceed( ( getJ1939MessagePriority( testMessage ) << 26u ) + ( getJ1939MessagePGN( testMessage ) << 8u ) + getJ1939MessageSA( testMessage ),
                                 true,
                                 8u,
-                                testMessage.data);
+                                getJ1939MessageData( testMessage ) );
     // when
-    uint8_t status = sendJ1939Message( stack, &testMessage );
+    uint8_t status = sendJ1939Message( stack, testMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
@@ -161,15 +157,15 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_when_receiving_a_message_from
         .andReturnValue( &canMessage );
     
     // when
-    j1939Message_t message = receiveJ1939Message( stack  );
+    testMessage = receiveJ1939Message( stack  );
 
     // then
-    UNSIGNED_LONGS_EQUAL( 0xfc8cu, message->parameterGroupNumber );
-    UNSIGNED_LONGS_EQUAL( 5u, message->priority );
-    UNSIGNED_LONGS_EQUAL( 0xffu, message->destinationAddress );
-    UNSIGNED_LONGS_EQUAL( 0xbbu, message->sourceAddress );
-    UNSIGNED_LONGS_EQUAL( 8u, message->dataSize );
-    MEMCMP_EQUAL( data, message->data, message->dataSize );
+    UNSIGNED_LONGS_EQUAL( 0xfc8cu, getJ1939MessagePGN( testMessage ) );
+    UNSIGNED_LONGS_EQUAL( 5u, getJ1939MessagePriority( testMessage ) );
+    UNSIGNED_LONGS_EQUAL( 0xffu, getJ1939MessageDA( testMessage ) );
+    UNSIGNED_LONGS_EQUAL( 0xbbu, getJ1939MessageSA( testMessage ) );
+    UNSIGNED_LONGS_EQUAL( 8u, getJ1939MessageDataLength( testMessage ) );
+    MEMCMP_EQUAL( data, getJ1939MessageData( testMessage ), getJ1939MessageDataLength( testMessage ) );
 }
 
 TEST( j1939StackImpl, given_a_j1939_stack_instance_when_setting_the_source_address_then_source_address_is_returned_through_the_interface )

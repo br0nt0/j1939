@@ -5,7 +5,7 @@
  * @date	2025
  ******************************************************************************/
 #include "addressClaimedImpl.h"
-#include "messageSend.h"
+#include "j1939Message.h"
 
 /******************************************************************************/
 typedef struct aclImplStruct* aclImpl_t;
@@ -31,16 +31,20 @@ struct aclImplStruct
 /******************************************************************************/
 inline static uint8_t sendACLMessage( aclImpl_t aclImpl )
 {
-    uint8_t status;
-    j1939Message_t message = ( j1939Message_t ) malloc( sizeof( j1939MessageStruct_t ) );
-    message->parameterGroupNumber = ACL_PGN;
-    message->sourceAddress = aclImpl->sourceAddress;
-    message->destinationAddress = GLOBAL_ADDRESS;
-    message->priority = 6u;
-    message->data = aclImpl->caName;
-    message->dataSize = 8u;
-    status = sendJ1939MessageToCANDriver( message, aclImpl->driver );
-    free( message );
+    uint8_t status = CAN_TX_MESSAGE_NOT_SENT;
+
+    j1939Message_t message = createJ1939Message(    ACL_PGN,
+                                                    6u,
+                                                    GLOBAL_ADDRESS,
+                                                    aclImpl->sourceAddress,
+                                                    aclImpl->caName,
+                                                    8u );
+    if ( message != NULL )
+    {
+        status = sendJ1939MessageToDriver( message, aclImpl->driver );
+        destroyJ1939Message( message );
+    }
+
     return ( status );
 }
 

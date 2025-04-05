@@ -5,5 +5,5 @@
 
 int main( int ac, char** av )
 {    
-    return CommandLineTestRunner::RunAllTests( ac, av );
+    return RUN_ALL_TESTS( ac, av );
 }
