@@ -5,6 +5,8 @@ pkg_search_module(CPPUTEST REQUIRED cpputest>=3.8)
 message(STATUS "Found CppUTest version ${CPPUTEST_VERSION}")
 
 set(CPPUTEST_LDFLAGS                "${CPPUTEST_LDFLAGS} -pthread")
+set(CPPUTEST_MALLOC_LEAK_DETECTOR   ${CPPUTEST_INCLUDE_DIRS}/CppUTest/MemoryLeakDetectorMallocMacros.h)
+
 
 set(COMMON_COMPILE_FLAGS            -O0 
                                     -g
@@ -32,6 +34,8 @@ target_include_directories(${EXECUTABLE} PRIVATE
 target_compile_options(${EXECUTABLE} PRIVATE
                                     ${COMMON_COMPILE_FLAGS}
                                     --coverage)
+target_compile_options(${EXECUTABLE} PUBLIC 
+                                    -include ${CPPUTEST_MALLOC_LEAK_DETECTOR})
 target_link_libraries(${EXECUTABLE} "--coverage")
 
 

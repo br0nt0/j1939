@@ -92,12 +92,14 @@ static void updateCoreScheduler( j1939_t super )
     j1939StackImpl_t self = ( j1939StackImpl_t ) super;
 
     j1939Message_t message = receiveJ1939MessageFromDriver( self->driver );
+    destroyJ1939Message( message );
 
     while ( NULL != message )
     {
         message = receiveJ1939MessageFromDriver( self->driver );
+        destroyJ1939Message( message );
     }
-    updateACLStateMachine( self->acl );
+    updateACLStateMachine( self->acl ); 
 }
 
 static bool_t wasAddressClaimed( j1939_t super )
