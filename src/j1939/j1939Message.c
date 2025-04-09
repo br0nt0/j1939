@@ -21,21 +21,6 @@ typedef struct j1939MessageStruct
 }j1939MessageStruct_t;
 
 /******************************************************************************/
-static void convertToCANMessage( canMessage_t canMessage, const j1939Message_t j1939Message )
-{
-    canMessage->id = ( uint32_t ) j1939Message->sourceAddress;
-    canMessage->id |= ( uint32_t ) j1939Message->priority << 26u;
-    canMessage->id |= ( uint32_t ) ( j1939Message->parameterGroupNumber << 8u );
-    if ( j1939Message->parameterGroupNumber < 0xf000u )
-    {
-        canMessage->id &= ~( ( uint32_t ) 0xffU << 8U );
-        canMessage->id |= ( uint32_t ) j1939Message->destinationAddress << 8u;
-    }
-    canMessage->isExtended = true;
-    canMessage->dlc = ( j1939Message->dataLength > 8U ) ? 8U : ( uint8_t ) j1939Message->dataLength;
-    canMessage->data = j1939Message->data;
-}
-
 static uint8_t extractDestinationAddress( uint32_t id )
 {
     uint8_t destinationAddress = CAN_GLOBAL_ADDRESS;
@@ -54,6 +39,19 @@ static uint32_t extractPGN( uint32_t id )
         pgn &= 0x1ff00u;
     }
     return ( pgn );
+}
+
+static uint32_t getCANIDFromJ1939Messge( j1939Message_t message )
+{
+    uint32_t id = ( uint32_t ) message->sourceAddress;
+    id |= ( uint32_t ) message->priority << 26u;
+    id |= ( uint32_t ) ( message->parameterGroupNumber << 8u );
+    if ( message->parameterGroupNumber < 0xf000u )
+    {
+        id &= ~( ( uint32_t ) 0xffU << 8U );
+        id |= ( uint32_t ) message->destinationAddress << 8u;
+    }
+    return ( id );
 }
 
 /******************************************************************************/
@@ -127,10 +125,12 @@ uint8_t sendJ1939MessageToDriver( j1939Message_t message, canDriver_t driver )
         status = CAN_DRIVER_NOT_OPERATIONAL;
         if ( isCANDriverOperational( driver ) )
         {
-            canMessage_t canMessage = ( canMessage_t ) malloc( sizeof( canMessageStruct_t ) );
-            convertToCANMessage( canMessage, message );
+            CANMessage_t canMessage = createCANMessage( getCANIDFromJ1939Messge( message ),
+                                                        true,
+                                                        message->data,
+                                                        message->dataLength );
             status = sendCANMessage( driver, canMessage );
-            free( canMessage );
+            destroyCANMessage( canMessage );
         }
     }
     return ( status );
@@ -142,18 +142,19 @@ j1939Message_t receiveJ1939MessageFromDriver( canDriver_t driver )
 
     if ( driver != NULL )
     {
-        canMessage_t canMessage = receiveCANMessage( driver );
+        CANMessage_t canMessage = receiveCANMessage( driver );
         if ( canMessage != NULL )
         {
-            if ( ( ( canMessage->id & EDP_BIT ) == 0u )
-                && ( canMessage->isExtended == true ) )
+            uint32_t id = getCANMessageID( canMessage );
+            if ( ( ( id & EDP_BIT ) == 0u )
+                && ( isCANMessageExtended( canMessage ) == true ) )
             {
-                j1939Message = createJ1939Message(  extractPGN( canMessage->id ),
-                                                    ( uint8_t ) ( ( canMessage->id >> 26u ) & 0x7u ),
-                                                    extractDestinationAddress(canMessage->id),
-                                                    ( uint8_t ) ( canMessage->id & 0xffu ),
-                                                    canMessage->data,
-                                                    canMessage->dlc );
+                j1939Message = createJ1939Message(  extractPGN( id ),
+                                                    ( uint8_t ) ( ( id >> 26u ) & 0x7u ),
+                                                    extractDestinationAddress( id ),
+                                                    ( uint8_t ) ( id & 0xffu ),
+                                                    getCANMessageData( canMessage ),
+                                                    getCANMessageDLC( canMessage ) );
             }
         }
     }

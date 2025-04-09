@@ -44,34 +44,24 @@ TEST_GROUP( addressClaimedImpl )
 	}
     void expectOneCallToSendMessageWithAddressClaim( void )
 	{
-		canMessageStruct_t expectedCANMessage;
-        expectedCANMessage.id = 0x18eeff00u + getACLSourceAddress( acl );
-        expectedCANMessage.isExtended = true;
-		expectedCANMessage.dlc = 8u;
-        expectedCANMessage.data = getCAName( acl );
         expectCANOperational( );
 		mock( "CANSpy" ).expectOneCall( "sendMessage" )
 			.withPointerParameter( "base", spyCANDriver )
-			.withUnsignedIntParameter( "id", expectedCANMessage.id )
-			.withBoolParameter( "isExtended", expectedCANMessage.isExtended )
-			.withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
-			.withPointerParameter( "data", expectedCANMessage.data )
+            .withUnsignedIntParameter( "id", 0x18eeff00u + getACLSourceAddress( acl ) )
+            .withBoolParameter( "isExtended", true )
+            .withUnsignedIntParameter( "dlc", 8u )
+            .withPointerParameter( "data", getCAName( acl ) )
 			.andReturnValue( CAN_TX_SUCCEEDED );
     }
     void expectOneCallToSendMessageWithTxBufferFull( void )
 	{
-		canMessageStruct_t expectedCANMessage;
-		expectedCANMessage.id = 0x18eeff00u + getACLSourceAddress( acl );
-		expectedCANMessage.isExtended = true;
-		expectedCANMessage.dlc = 8u;
-		expectedCANMessage.data = getCAName( acl );
 		expectCANOperational( );
 		mock( "CANSpy" ).expectOneCall( "sendMessage" )
 			.withPointerParameter( "base", spyCANDriver )
-			.withUnsignedIntParameter( "id", expectedCANMessage.id )
-			.withBoolParameter( "isExtended", expectedCANMessage.isExtended )
-			.withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
-			.withPointerParameter( "data", expectedCANMessage.data )
+			.withUnsignedIntParameter( "id", 0x18eeff00u + getACLSourceAddress( acl ) )
+			.withBoolParameter( "isExtended", true )
+			.withUnsignedIntParameter( "dlc", 8u )
+			.withPointerParameter( "data", getCAName( acl ) )
 			.andReturnValue( CAN_TX_BUFFER_FULL );
     }
     void expectAddressClaimWithAddress( uint8_t address )

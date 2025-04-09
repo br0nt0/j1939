@@ -27,7 +27,7 @@ TEST_GROUP( j1939Message )
     uint8_t destinationAddress = 0x03u;
     uint8_t sourceAddress = 0x02u;
     uint8_t canData[ 8 ] = { 3u, 4u, 5u, 6u, 7u, 8u, 9u, 1u };
-    canMessageStruct_t canMessage = { 0x14fb8caau, true, 8u, canData };
+    CANMessage_t canMessage = NULL;
     void setup( void )
     {
         filledMessage = createJ1939Message( parameterGroupNumber, priority, destinationAddress, sourceAddress, data, dataLength );
@@ -38,6 +38,7 @@ TEST_GROUP( j1939Message )
         destroyJ1939Message( filledMessage );
         destroyJ1939Message( receivedMessage );
         destroyCANDriver( canSpy );
+        destroyCANMessage( canMessage );
         mock( "CANSpy" ).checkExpectations( );
 		mock( ).clear( );
     }
@@ -147,21 +148,17 @@ TEST( j1939Message, given_a_non_operational_can_driver_when_sending_j1939_messag
 TEST( j1939Message, given_a_j1939_message_with_protocol_format_equal_to_240_when_encoding_to_CAN_message_then_PS_field_is_group_extension )
 {
     // given
-    canMessageStruct_t expectedCANMessage;
-    expectedCANMessage.id = ( getJ1939MessagePriority( filledMessage ) << 26u ) + ( getJ1939MessagePGN( filledMessage ) << 8u ) + ( getJ1939MessageSA( filledMessage ) );
-    expectedCANMessage.isExtended = true;
-    expectedCANMessage.dlc = ( uint8_t ) getJ1939MessageDataLength( filledMessage );
-    expectedCANMessage.data = getJ1939MessageData( filledMessage );
+    uint32_t id = ( getJ1939MessagePriority( filledMessage ) << 26u ) + ( getJ1939MessagePGN( filledMessage ) << 8u ) + ( getJ1939MessageSA( filledMessage ) );
 
     mock( "CANSpy" ).expectOneCall( "isOperational" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( true );
     mock( "CANSpy" ).expectOneCall( "sendMessage" )
         .withPointerParameter( "base", canSpy )
-        .withUnsignedIntParameter( "id", expectedCANMessage.id )
-        .withBoolParameter( "isExtended", expectedCANMessage.isExtended )
-        .withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
-        .withPointerParameter( "data", expectedCANMessage.data )
+        .withUnsignedIntParameter( "id", id )
+        .withBoolParameter( "isExtended", true )
+        .withUnsignedIntParameter( "dlc", getJ1939MessageDataLength( filledMessage ) )
+        .withPointerParameter( "data", getJ1939MessageData( filledMessage ) )
         .andReturnValue( CAN_TX_SUCCEEDED );
 
     // when
@@ -176,24 +173,20 @@ TEST( j1939Message, given_a_j1939_message_with_protocol_format_less_than_240_whe
     // given
     j1939Message_t message = createJ1939Message( 0xefffu, priority, destinationAddress, sourceAddress, data, dataLength );
 
-    canMessageStruct_t expectedCANMessage;
-    expectedCANMessage.id = getJ1939MessagePriority( message ) << 26u;
-    expectedCANMessage.id += ( getJ1939MessagePGN( message ) >> 8u) << 16u;
-    expectedCANMessage.id += getJ1939MessageDA( message ) << 8u;
-    expectedCANMessage.id += getJ1939MessageSA( message );
-    expectedCANMessage.isExtended = true;
-    expectedCANMessage.dlc = ( uint8_t ) getJ1939MessageDataLength( message );
-    expectedCANMessage.data = getJ1939MessageData( message );
-
+    uint32_t id = getJ1939MessagePriority( message ) << 26u;
+    id += ( getJ1939MessagePGN( message ) >> 8u) << 16u;
+    id += getJ1939MessageDA( message ) << 8u;
+    id += getJ1939MessageSA( message );
+    
     mock( "CANSpy" ).expectOneCall( "isOperational" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( true );
     mock( "CANSpy" ).expectOneCall( "sendMessage" )
         .withPointerParameter( "base", canSpy )
-        .withUnsignedIntParameter( "id", expectedCANMessage.id )
-        .withBoolParameter( "isExtended", expectedCANMessage.isExtended )
-        .withUnsignedIntParameter( "dlc", expectedCANMessage.dlc )
-        .withPointerParameter( "data", expectedCANMessage.data )
+        .withUnsignedIntParameter( "id", id )
+        .withBoolParameter( "isExtended", true )
+        .withUnsignedIntParameter( "dlc", getJ1939MessageDataLength( message ) )
+        .withPointerParameter( "data", getJ1939MessageData( message ) )
         .andReturnValue( CAN_TX_SUCCEEDED );
     
     // when
@@ -232,9 +225,10 @@ TEST( j1939Message, given_a_CAN_driver_that_has_no_messages_returned_when_receiv
 TEST( j1939Message, given_a_CAN_driver_that_has_a_message_returned_when_receiving_a_message_from_it_then_message_is_converted_to_j1939_format )
 {
     // given
+    canMessage = createCANMessage( 0x14fb8caau, true, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
-        .andReturnValue( &canMessage );
+        .andReturnValue( canMessage );
 
     // when
     receivedMessage = receiveJ1939MessageFromDriver( canSpy );
@@ -244,16 +238,16 @@ TEST( j1939Message, given_a_CAN_driver_that_has_a_message_returned_when_receivin
     UNSIGNED_LONGS_EQUAL( 0xaau, getJ1939MessageSA( receivedMessage ) );
     UNSIGNED_LONGS_EQUAL( 0xffu, getJ1939MessageDA( receivedMessage ) );
     UNSIGNED_LONGS_EQUAL( 8u, getJ1939MessageDataLength( receivedMessage ) );
-    MEMCMP_EQUAL( canMessage.data, getJ1939MessageData( receivedMessage ), getJ1939MessageDataLength( receivedMessage ) );
+    MEMCMP_EQUAL( getCANMessageData( canMessage ), getJ1939MessageData( receivedMessage ), getJ1939MessageDataLength( receivedMessage ) );
 }
 
 TEST( j1939Message, given_a_CAN_message_with_PF_less_than_240_when_converting_id_to_j1939_then_destination_address_is_PS_field )
 {
     // given
-    canMessage.id = 0x14efaa77u;
+    canMessage = createCANMessage( 0x14efaa77u, true, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
-        .andReturnValue( &canMessage );
+        .andReturnValue( canMessage );
 
     // when
     receivedMessage = receiveJ1939MessageFromDriver( canSpy );
@@ -263,16 +257,16 @@ TEST( j1939Message, given_a_CAN_message_with_PF_less_than_240_when_converting_id
     UNSIGNED_LONGS_EQUAL( 0x77u, getJ1939MessageSA( receivedMessage ) );
     UNSIGNED_LONGS_EQUAL( 0xaau, getJ1939MessageDA( receivedMessage ) );
     UNSIGNED_LONGS_EQUAL( 8u, getJ1939MessageDataLength( receivedMessage ) );
-    MEMCMP_EQUAL( canMessage.data, getJ1939MessageData( receivedMessage ), getJ1939MessageDataLength( receivedMessage ) );
+    MEMCMP_EQUAL( getCANMessageData( canMessage ), getJ1939MessageData( receivedMessage ), getJ1939MessageDataLength( receivedMessage ) );
 }
 
 TEST( j1939Message, given_CAN_message_with_DP_1_when_decoding_to_J1939_then_pgn_is_decoded )
 {
     // given
-    canMessage.id = 0x11ffff21u;
+    canMessage = createCANMessage( 0x11ffff21u, true, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
-        .andReturnValue( &canMessage );
+        .andReturnValue( canMessage );
 
     // when
     receivedMessage = receiveJ1939MessageFromDriver( canSpy );
@@ -284,10 +278,10 @@ TEST( j1939Message, given_CAN_message_with_DP_1_when_decoding_to_J1939_then_pgn_
 TEST( j1939Message, given_CAN_message_which_is_not_extended_when_decoding_to_J1939_then_message_is_null )
 {
     // given
-    canMessage.isExtended = false;
+    canMessage = createCANMessage( 0x7ffu, false, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
-        .andReturnValue( &canMessage );
+        .andReturnValue( canMessage );
 
     // when
     receivedMessage = receiveJ1939MessageFromDriver( canSpy );
@@ -299,10 +293,10 @@ TEST( j1939Message, given_CAN_message_which_is_not_extended_when_decoding_to_J19
 TEST( j1939Message, given_CAN_message_with_EDP_1_when_converting_to_j1939_then_output_message_is_null )
 {
     // given
-    canMessage.id = 0x2000000u | 0x1cf01234u;
+    canMessage = createCANMessage( 0x2000000u | 0x1cf01234u, true, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
-        .andReturnValue( &canMessage );
+        .andReturnValue( canMessage );
 
     // when
     receivedMessage = receiveJ1939MessageFromDriver( canSpy );

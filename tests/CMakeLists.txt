@@ -33,8 +33,7 @@ target_include_directories(${EXECUTABLE} PRIVATE
                                     ${PRJ_INCLUDE_DIR})
 target_compile_options(${EXECUTABLE} PRIVATE
                                     ${COMMON_COMPILE_FLAGS}
-                                    --coverage)
-target_compile_options(${EXECUTABLE} PUBLIC 
+                                    --coverage
                                     -include ${CPPUTEST_MALLOC_LEAK_DETECTOR})
 target_link_libraries(${EXECUTABLE} "--coverage")
 

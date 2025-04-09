@@ -102,7 +102,11 @@
 			"j1939stackimpl.h": "c",
 			"j1939message.h": "c",
 			"ij1939stack.h": "c",
-			"memory": "cpp"
+			"memory": "cpp",
+			"cstdint": "c",
+			"stdint.h": "c",
+			"stdint-gcc.h": "c",
+			"extendedcanmessage.h": "c"
 		}
 	}
 }

@@ -12,44 +12,31 @@
 /******************************************************************************/
 struct picCANDriverStruct
 {
-    canDriverStruct_t base;
+    canDriverStruct_t super;
     canDriverInterfaceStruct_t interface;
     canRegisters_t* moduleRegs;
-    canMessageStruct_t rxMessage;
     canModule_t module;
 };
+
+typedef struct picCANDriverStruct* picCANDriver_t;
+
 /******************************************************************************/
-static void destroy( canDriver_t base )
+static void destroy( canDriver_t super )
 {
-    picCANDriver_t self = ( picCANDriver_t ) base;
+    picCANDriver_t self = ( picCANDriver_t ) super;
     free( self );
 }
 
-static bool_t isOperational( canDriver_t base )
+static bool_t isOperational( canDriver_t super )
 {
-    picCANDriver_t self = ( picCANDriver_t ) base;
+    picCANDriver_t self = ( picCANDriver_t ) super;
     return ( self->moduleRegs->CxCON.bits.CANBUSY > 0u );
 }
 
-static bool_t isTxBusOff( canDriver_t base )
+static bool_t isTxBusOff( canDriver_t super )
 {
-    picCANDriver_t self = ( picCANDriver_t ) base;
+    picCANDriver_t self = ( picCANDriver_t ) super;
     return ( ( ( self->moduleRegs->CxTREC >> 16u ) & CAN_TX_BUS_OFF_STATE ) > 0u );
-}
-
-static void processMessageBuffer( canMessage_t msg, canRxMessageBuffer_t* buffer )
-{
-    msg->isExtended = ( buffer->eid.IDE > 0u ) ? true : false;
-    if ( msg->isExtended )
-    {
-        msg->id = ( uint32_t ) buffer->eid.EID + ( ( uint32_t ) buffer->sid.SID << 18u );
-    }
-    else
-    {
-        msg->id = buffer->sid.SID;
-    }
-    msg->dlc = ( uint8_t ) buffer->eid.DLC;
-    msg->data = buffer->data;
 }
 
 static void updateFifo( picCANDriver_t self, canFifo_t fifo )
@@ -62,45 +49,61 @@ static bool_t isReceiveFifoEmpty( picCANDriver_t self, uint8_t fifo )
     return ( self->moduleRegs->canFifoRegisters[ fifo ].CxFIFOINT.bits.RXNEMPTYIF > 0u );
 }
 
-static canMessage_t receiveMessage( canDriver_t base )
+static uint32_t getIDFromBuffer( canRxMessageBuffer_t* buffer, bool_t isExtended )
 {
-    picCANDriver_t self = ( picCANDriver_t ) base;
-    canMessage_t msg = NULL;
+    uint32_t id;
+    if ( isExtended )
+    {
+        id = ( uint32_t ) buffer->eid.EID + ( ( uint32_t ) buffer->sid.SID << 18u );
+    }
+    else
+    {
+        id = buffer->sid.SID;
+    }
+    return ( id );
+}
+
+static CANMessage_t receiveMessage( canDriver_t super )
+{
+    picCANDriver_t self = ( picCANDriver_t ) super;
+    CANMessage_t msg = NULL;
     if ( isReceiveFifoEmpty( self, CAN_FIFO0 ) )
     {
         canRxMessageBuffer_t* buffer = getRxCxFIFOUA( self->module, CAN_FIFO0 );
         if ( NULL != buffer )
         {
-            msg = &self->rxMessage;
-            processMessageBuffer( msg, buffer );
+            bool_t isExtended = ( buffer->eid.IDE > 0u ) ? true : false;
+            uint32_t id = getIDFromBuffer( buffer, isExtended );
+            msg = createCANMessage( id, isExtended, buffer->data, ( uint8_t ) buffer->eid.DLC );
             updateFifo( self, CAN_FIFO0 );
         }
     }
-
     return ( msg );
 }
 
-static void loadMessageIntoBuffer( const canMessage_t message, canTxMessageBuffer_t* buffer )
+static void loadMessageIntoBuffer( const CANMessage_t message, canTxMessageBuffer_t* buffer )
 {
-    if ( message->isExtended )
-    {
-        buffer->sid.SID = ( message->id >> 18u ) & 0x7ffu;
-        buffer->eid.EID = message->id & 0x3ffffu;
+    uint32_t id = getCANMessageID( message );
+    if ( isCANMessageExtended( message ) )
+    {        
+        buffer->sid.SID = ( id >> 18u ) & 0x7ffu;
+        buffer->eid.EID = id & 0x3ffffu;
         buffer->eid.IDE = 1u;
         buffer->eid.SRR = 1u;
     }
     else
     {
-        buffer->sid.SID = message->id & 0x7ffu;
+        buffer->sid.SID = id & 0x7ffu;
         buffer->eid.IDE = 0u;
     }
-    buffer->eid.DLC = message->dlc;
+    buffer->eid.DLC = getCANMessageDLC( message );
     buffer->eid.RTR = 0u;
     buffer->eid.RB0 = 0u;
     buffer->eid.RB1 = 0u;
-    for ( uint8_t i = 0u; i < message->dlc; ++i )
+    const uint8_t* data = getCANMessageData( message );
+    for ( uint8_t i = 0u; i < getCANMessageDLC( message ); ++i )
     {
-        buffer->data[ i ] = message->data[ i ];
+        buffer->data[ i ] = data[ i ];
     }
 }
 static void flushTxFifo( picCANDriver_t driver, canFifo_t fifo )
@@ -150,9 +153,9 @@ static uint8_t getTxStatusByReadingErrorFlags( picCANDriver_t self, canFifo_t fi
     return ( status );
 }
 
-static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
+static uint8_t sendMessage( canDriver_t super, const CANMessage_t message )
 {
-    picCANDriver_t self = ( picCANDriver_t ) base;
+    picCANDriver_t self = ( picCANDriver_t ) super;
     uint8_t status = CAN_TX_BUFFER_FULL;
     if ( isTxFifoFull( self, CAN_FIFO1 ) )
     {
@@ -175,8 +178,8 @@ canDriver_t createPIC32MZCANDriverForModule( uint8_t module )
     self->interface.isTxBussOffState = isTxBusOff;
     self->interface.receiveMessage = receiveMessage;
     self->interface.sendMessage = sendMessage;
-    self->base.vTable = &self->interface;
-    self->base.type = "PIC32MZ";
+    self->super.vTable = &self->interface;
+    self->super.type = "PIC32MZ";
     self->moduleRegs = getCANModuleRegisters( module );
     self->module = module;
 

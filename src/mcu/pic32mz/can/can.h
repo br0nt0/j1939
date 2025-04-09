@@ -9,8 +9,6 @@
 /******************************************************************************/
 #include "drivers/CANDriver.h"
 
-typedef struct picCANDriverStruct* picCANDriver_t;
-
 /******************************************************************************/
 canDriver_t createPIC32MZCANDriverForModule( uint8_t module );
 
