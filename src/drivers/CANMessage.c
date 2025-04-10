@@ -69,13 +69,28 @@ uint32_t getCANMessageID( CANMessage_t self )
     return ( id );
 }
 
-CANMessage_t createCANMessage( uint32_t id, bool_t isExtended, uint8_t* data, uint8_t dlc )
+CANMessage_t createExtendedCANMessage( uint32_t id, uint8_t* data, uint8_t dlc )
 {
     CANMessage_t self = NULL;
     if ( isInputDataValid( data, dlc ) )
     {
         self = ( CANMessage_t ) malloc( sizeof( CANMessageStruct_t ) );
-        self->isExtended = isExtended;
+        self->isExtended = true;
+        self->id = id;
+        self->data = data;
+        self->dlc = dlc;
+    }
+    return ( self );
+}
+
+CANMessage_t createStandardCANMessage( uint32_t id, uint8_t* data, uint8_t dlc )
+{
+    CANMessage_t self = NULL;
+    if ( isInputDataValid( data, dlc )
+        && ( id < 0x7ffu ) )
+    {
+        self = ( CANMessage_t ) malloc( sizeof( CANMessageStruct_t ) );
+        self->isExtended = false;
         self->id = id;
         self->data = data;
         self->dlc = dlc;

@@ -77,50 +77,83 @@ TEST( CANMessage, given_a_null_CAN_message_when_getting_then_ID_then_zero_return
     UNSIGNED_LONGS_EQUAL( 0u, getCANMessageID( NULL ) );
 }
 
-TEST( CANMessage, given_a_standard_CAN_message_when_creating_it_then_it_is_not_extended )
+TEST( CANMessage, given_an_ID_equal_to_0x7ff_when_creating_an_extended_CAN_message_then_it_is_extended )
 {
     // given
 
     // when
-    message = createCANMessage( id, false, data, dlc );
+    message = createExtendedCANMessage( 0x7ffu, data, dlc );
 
     // then
-    CHECK_FALSE( isCANMessageExtended( message ) );
+    CHECK_TRUE( isCANMessageExtended( message ) );
 }
 
-TEST( CANMessage, given_a_CAN_message_with_zero_dlc_when_creating_it_then_null_returned )
+TEST( CANMessage, given_a_zero_size_for_data_when_creating_an_extended_CAN_message_then_null_returned )
 {
     // given
 
     // when
-    message = createCANMessage( id, isExtended, data, 0u );
-
-    // then
-    CHECK_TRUE( message == NULL );
-}
-
-TEST( CANMessage, given_a_CAN_message_with_null_data_when_creating_it_then_null_returned )
-{
-    // given
-
-    // when
-    message = createCANMessage( id, isExtended, NULL, dlc );
+    message = createExtendedCANMessage( id, data, 0u );
 
     // then
     CHECK_TRUE( message == NULL );
 }
 
-TEST( CANMessage, given_an_extended_CAN_message_when_creating_it_then_accessors_return_the_correct_values )
+TEST( CANMessage, given_null_data_when_creating_an_extended_CAN_message_then_null_returned )
 {
     // given
 
     // when
-    message = createCANMessage( id, isExtended, data, dlc );
+    message = createExtendedCANMessage( id, NULL, dlc );
+
+    // then
+    CHECK_TRUE( message == NULL );
+}
+
+TEST( CANMessage, given_valid_input_data_when_creating_an_extended_CAN_message_then_accessors_give_requested_information )
+{
+    // given
+
+    // when
+    message = createExtendedCANMessage( id, data, dlc );
 
     // then
     CHECK_FALSE( message == NULL );
     UNSIGNED_LONGS_EQUAL( id, getCANMessageID( message ) );
     CHECK_TRUE( isCANMessageExtended( message ) );
     MEMCMP_EQUAL( data, getCANMessageData( message ), getCANMessageDLC( message ) );
+}
+
+TEST( CANMessage, given_an_ID_bigger_than_0x7ff_when_creating_a_standard_CAN_message_then_null_returned )
+{
+    // given
+
+    // when
+    message = createStandardCANMessage( 0x7ffu + 1u, data, dlc );
+
+    // then
+    CHECK_TRUE( NULL == message );
+}
+
+TEST( CANMessage, given_a_zero_size_for_data_when_creating_a_standard_CAN_message_then_null_returned )
+{
+    // given
+
+    // when
+    message = createStandardCANMessage( id, data, 0u );
+
+    // then
+    CHECK_TRUE( message == NULL );
+}
+
+TEST( CANMessage, given_null_data_when_creating_a_standard_CAN_message_then_null_returned )
+{
+    // given
+
+    // when
+    message = createStandardCANMessage( id, NULL, dlc );
+
+    // then
+    CHECK_TRUE( message == NULL );
 }
 

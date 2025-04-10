@@ -61,7 +61,7 @@ TEST_GROUP( can )
     }
     void setUpExtendedTransmittedMessage( )
     {
-        canMessage = createCANMessage( 0x1fffffffu, true, data, 4u );
+        canMessage = createExtendedCANMessage( 0x1fffffffu, data, 4u );
 
         expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
     }
@@ -254,7 +254,7 @@ TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_extended_CAN_message_to
 TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_standard_CAN_message_to_HW_then_registers_are_loaded_accordingly )
 {
     // given
-    canMessage = createCANMessage( 0x7ffu, false, data, 4u );
+    canMessage = createStandardCANMessage( 0x7ffu, data, 4u );
 
     expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
@@ -277,7 +277,7 @@ TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_standard_CAN_message_to
 TEST( can, given_fifo_1_as_transmit_fifo_when_sending_a_CAN_message_to_HW_then_transmit_fifo_is_flushed )
 {
     // given
-    canMessage = createCANMessage( 0x7ffu, false, data, 4u );
+    canMessage = createStandardCANMessage( 0x7ffu, data, 4u );
 
     expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
@@ -294,7 +294,7 @@ TEST( can, given_full_transmit_fifo_when_sending_a_CAN_message_to_HW_then_no_mes
 {
     // given
     txMessageBuffer.sid.SID = 0x123u;
-    canMessage = createCANMessage( 0x7ffu, false, data, 4u );
+    canMessage = createStandardCANMessage( 0x7ffu, data, 4u );
 
     mock( "PIC32MZ_CAN" ).expectNoCall( "getPIC32MZRxCxFIFOUA" );
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 0u;

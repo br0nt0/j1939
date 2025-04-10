@@ -58,7 +58,7 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_transmitting_a_message_then_the_ex
 {
     // given
     uint8_t data[ 8 ] = { 7u, 6u, 5u, 4u, 3u, 2u, 1u, 0u };
-    CANMessage_t message = createCANMessage( 0x1cfd5411u, true, data, 8u );
+    CANMessage_t message = createExtendedCANMessage( 0x1cfd5411u, data, 8u );
     mock( "CANSpy" ).expectOneCall( "sendMessage" )
         .withPointerParameter( "base", spy )
         .withUnsignedIntParameter( "id", getCANMessageID( message ) )
@@ -79,7 +79,7 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_one_message_then_the_exp
 {
     // given
     uint8_t data[ 3 ] = { 3u, 4u, 5u };
-    CANMessage_t expectedMessage = createCANMessage( 0x423432u, true, data, 3u );
+    CANMessage_t expectedMessage = createExtendedCANMessage( 0x423432u, data, 3u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", spy )
         .andReturnValue( expectedMessage );
@@ -96,8 +96,8 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_many_messages_then_the_e
 {
     // given
     uint8_t data[ 3 ] = { 1u,2u,3u };
-    CANMessage_t expectedMessage1 = createCANMessage( 0x21345u, true, data, 3u );
-    CANMessage_t expectedMessage2 = createCANMessage( 0x543253u, true, data, 3u );
+    CANMessage_t expectedMessage1 = createExtendedCANMessage( 0x21345u, data, 3u );
+    CANMessage_t expectedMessage2 = createExtendedCANMessage( 0x543253u, data, 3u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", spy )
         .andReturnValue( expectedMessage1 );

@@ -74,7 +74,15 @@ static CANMessage_t receiveMessage( canDriver_t super )
         {
             bool_t isExtended = ( buffer->eid.IDE > 0u ) ? true : false;
             uint32_t id = getIDFromBuffer( buffer, isExtended );
-            msg = createCANMessage( id, isExtended, buffer->data, ( uint8_t ) buffer->eid.DLC );
+            if ( isExtended )
+            {
+                msg = createExtendedCANMessage( id, buffer->data, ( uint8_t ) buffer->eid.DLC );
+            }
+            else
+            {
+                msg = createStandardCANMessage( id, buffer->data, ( uint8_t ) buffer->eid.DLC );
+            }
+
             updateFifo( self, CAN_FIFO0 );
         }
     }

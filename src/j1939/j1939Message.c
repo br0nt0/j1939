@@ -54,6 +54,11 @@ static uint32_t getCANIDFromJ1939Messge( j1939Message_t message )
     return ( id );
 }
 
+static bool_t areInputsValid( uint32_t parameterGroupNumber, const uint8_t* data, uint8_t dataLength )
+{
+    return ( ( parameterGroupNumber > 0u ) && ( data != NULL ) && ( dataLength > 0u ) );
+}
+
 /******************************************************************************/
 j1939Message_t createJ1939Message(  uint32_t parameterGroupNumber,
                                     uint8_t priority,
@@ -63,7 +68,7 @@ j1939Message_t createJ1939Message(  uint32_t parameterGroupNumber,
                                     uint8_t dataLength )
 {
     j1939Message_t self = NULL;
-    if ( ( parameterGroupNumber != 0u ) && ( data != NULL ) && ( dataLength > 0u ) )
+    if ( areInputsValid( parameterGroupNumber, data, dataLength ) )
     {
         self = ( j1939Message_t ) malloc( sizeof( j1939MessageStruct_t ) );
         if ( self != NULL )
@@ -78,6 +83,8 @@ j1939Message_t createJ1939Message(  uint32_t parameterGroupNumber,
     }
     return ( self );
 }
+
+
 
 void destroyJ1939Message( j1939Message_t self )
 {
@@ -125,10 +132,9 @@ uint8_t sendJ1939MessageToDriver( j1939Message_t message, canDriver_t driver )
         status = CAN_DRIVER_NOT_OPERATIONAL;
         if ( isCANDriverOperational( driver ) )
         {
-            CANMessage_t canMessage = createCANMessage( getCANIDFromJ1939Messge( message ),
-                                                        true,
-                                                        message->data,
-                                                        message->dataLength );
+            CANMessage_t canMessage = createExtendedCANMessage( getCANIDFromJ1939Messge( message ),
+                                                                message->data,
+                                                                message->dataLength );
             status = sendCANMessage( driver, canMessage );
             destroyCANMessage( canMessage );
         }

@@ -17,7 +17,8 @@ bool_t isCANMessageExtended( CANMessage_t self );
 uint8_t* getCANMessageData( CANMessage_t self );
 uint8_t getCANMessageDLC( CANMessage_t self );
 uint32_t getCANMessageID( CANMessage_t self );
-CANMessage_t createCANMessage( uint32_t id, bool_t isExtended, uint8_t* data, uint8_t dlc );
+CANMessage_t createExtendedCANMessage( uint32_t id, uint8_t* data, uint8_t dlc );
+CANMessage_t createStandardCANMessage( uint32_t id, uint8_t* data, uint8_t dlc );
 
 
 #endif /* CANMESSAGE_H_ */

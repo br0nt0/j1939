@@ -225,7 +225,7 @@ TEST( j1939Message, given_a_CAN_driver_that_has_no_messages_returned_when_receiv
 TEST( j1939Message, given_a_CAN_driver_that_has_a_message_returned_when_receiving_a_message_from_it_then_message_is_converted_to_j1939_format )
 {
     // given
-    canMessage = createCANMessage( 0x14fb8caau, true, canData, 8u );
+    canMessage = createExtendedCANMessage( 0x14fb8caau, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( canMessage );
@@ -244,7 +244,7 @@ TEST( j1939Message, given_a_CAN_driver_that_has_a_message_returned_when_receivin
 TEST( j1939Message, given_a_CAN_message_with_PF_less_than_240_when_converting_id_to_j1939_then_destination_address_is_PS_field )
 {
     // given
-    canMessage = createCANMessage( 0x14efaa77u, true, canData, 8u );
+    canMessage = createExtendedCANMessage( 0x14efaa77u, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( canMessage );
@@ -263,7 +263,7 @@ TEST( j1939Message, given_a_CAN_message_with_PF_less_than_240_when_converting_id
 TEST( j1939Message, given_CAN_message_with_DP_1_when_decoding_to_J1939_then_pgn_is_decoded )
 {
     // given
-    canMessage = createCANMessage( 0x11ffff21u, true, canData, 8u );
+    canMessage = createExtendedCANMessage( 0x11ffff21u, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( canMessage );
@@ -278,7 +278,7 @@ TEST( j1939Message, given_CAN_message_with_DP_1_when_decoding_to_J1939_then_pgn_
 TEST( j1939Message, given_CAN_message_which_is_not_extended_when_decoding_to_J1939_then_message_is_null )
 {
     // given
-    canMessage = createCANMessage( 0x7ffu, false, canData, 8u );
+    canMessage = createStandardCANMessage( 0x7ffu, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( canMessage );
@@ -293,7 +293,7 @@ TEST( j1939Message, given_CAN_message_which_is_not_extended_when_decoding_to_J19
 TEST( j1939Message, given_CAN_message_with_EDP_1_when_converting_to_j1939_then_output_message_is_null )
 {
     // given
-    canMessage = createCANMessage( 0x2000000u | 0x1cf01234u, true, canData, 8u );
+    canMessage = createExtendedCANMessage( 0x2000000u | 0x1cf01234u, canData, 8u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", canSpy )
         .andReturnValue( canMessage );

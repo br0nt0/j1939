@@ -39,7 +39,7 @@ TEST( CANDriver, given_null_driver_when_destroying_CAN_driver_then_no_seg_fault 
 TEST( CANDriver, given_null_driver_when_sending_a_messge_then_no_seg_fault )
 {
     // given
-    message = createCANMessage( 0x123456u, true, data, 3u );
+    message = createExtendedCANMessage( 0x123456u, data, 3u );
 
     // when
     uint8_t status = sendCANMessage( NULL, message );

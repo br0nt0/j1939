@@ -141,7 +141,7 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_when_receiving_a_message_from
 {
     // given
     uint8_t data[ 8 ] = { 11u, 22u, 44u, 33u, 55u, 22u, 77u, 88u };
-    CANMessage_t canMessage = createCANMessage( 0x14fc8cbbu, true, data, 8u );    
+    CANMessage_t canMessage = createExtendedCANMessage( 0x14fc8cbbu, data, 8u );    
 
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", spyCAN )
@@ -223,7 +223,36 @@ TEST( j1939StackImpl, given_2_messages_in_mailbox_but_no_acl_contention_for_more
 {
     // given
     uint8_t data[ 8 ] = { 3u, 4u, 5u, 6u, 7u, 8u, 9u, 1u };
-    CANMessage_t canMessage = createCANMessage( 0x14fb8caau, true, data, 8u );
+    CANMessage_t canMessage = createExtendedCANMessage( 0x14fb8caau, data, 8u );
+    mock( "CANSpy" ).expectNCalls( 2, "receiveMessage" )
+        .withPointerParameter( "base", spyCAN )
+        .andReturnValue( canMessage );
+
+    uint8_t howManyUpdatesIn250Ms = ( uint8_t ) ( 250u / getJ1939ConfiguredTickMs( stack ) );
+
+    expectNReceivedNullMessages( howManyUpdatesIn250Ms + 1u );
+    expectNTimesNoBusOff( howManyUpdatesIn250Ms );
+    expectOneCallToSendMessageWithAddressClaim( );
+
+    // when
+    for ( uint8_t i = 0u; i < ( howManyUpdatesIn250Ms + 1u ); i++ )
+    {
+        updateJ1939CoreScheduler( stack );
+    }
+
+    // then
+    CHECK_TRUE( wasJ1939AddressClaimed( stack ) );
+    destroyCANMessage( canMessage );
+}
+
+IGNORE_TEST( j1939StackImpl, given_a_received_address_claim_request_when_updating_core_scheduler_then_ACL_sent )
+{
+    // given
+    uint8_t data[ 3 ];
+    data[ 0 ] = J1939_AC & 0xffu;
+    data[ 1 ] = ( J1939_AC >> 8u ) & 0xffu;
+    data[ 2 ] = ( J1939_AC >> 16u ) & 0xffu;
+    CANMessage_t canMessage = createExtendedCANMessage( 0x18eaa300u, data, 3u );
     mock( "CANSpy" ).expectNCalls( 2, "receiveMessage" )
         .withPointerParameter( "base", spyCAN )
         .andReturnValue( canMessage );

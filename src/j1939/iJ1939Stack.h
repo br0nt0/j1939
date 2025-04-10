@@ -10,6 +10,12 @@
 #include "commonTypes.h"
 #include "j1939Message.h"
 
+enum
+{
+    J1939_RQST = 59904u,
+    J1939_AC = 60928u
+};
+
 typedef struct j1939Struct* j1939_t;
 typedef struct j1939InterfaceStruct* j1939Interface_t;
 typedef struct j1939Struct
