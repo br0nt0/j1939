@@ -26,7 +26,7 @@ typedef struct aclInterfaceStruct
     void ( *registerReqForACL )( acl_t );
     void ( *registerMessageWOwnSA )( acl_t );
     void ( *registerContention )( acl_t, const uint8_t* );
-    void ( *setName )( acl_t, uint8_t* );
+    void ( *setName )( acl_t, const uint8_t* );
     uint8_t* ( *getName )( acl_t );
     void ( *setSA )( acl_t, uint8_t );
     uint8_t( *getSA )( acl_t );
@@ -39,7 +39,7 @@ bool_t wasACLSuccessful( acl_t acl );
 void registerRequestForACL( acl_t acl );
 void registerRcvMessageWithOwnSourceAddress( acl_t acl );
 void registerACLContention( acl_t acl, const uint8_t* name );
-void setCAName( acl_t acl, uint8_t* name );
+void setCAName( acl_t acl, const uint8_t* name );
 uint8_t* getCAName( acl_t acl );
 void setACLSourceAddress( acl_t acl, uint8_t sourceAddress );
 uint8_t getACLSourceAddress( acl_t acl );

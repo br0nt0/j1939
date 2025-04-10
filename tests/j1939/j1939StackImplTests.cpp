@@ -12,23 +12,26 @@
 extern "C"
 {
 #include "j1939/j1939StackImpl.h"
-#include "j1939/addressClaimedImpl.h"
 }
 
 TEST_GROUP( j1939StackImpl )
 {
     j1939_t stack;
     canDriver_t spyCAN;
+    acl_t acl;
     uint8_t name[ 8 ] = { 0xf1u, 0xf2u, 0xf3u, 0xf4u, 0xf5u, 0xf6u, 0xf7u, 0xf8u };
     j1939Message_t testMessage = NULL;
+    uint8_t ticksMs = 10u;
     void setup( void )
     {
         spyCAN = createCANDriverSpy( );
-        stack = createJ1939StackImpl( spyCAN, 10u, name );
+        acl = createAddressClaimed( spyCAN, ticksMs, name, 0x11u );
+        stack = createJ1939StackImpl( acl, spyCAN );
     }
     void teardown( void )
     {
         destroyJ1939Stack( stack );
+        destroyACL( acl );
         destroyCANDriver( spyCAN );
         destroyJ1939Message( testMessage );
         mock( "CANSpy" ).checkExpectations( );
@@ -87,40 +90,29 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_then_it_can_be_created_and_de
     // then
 }
 
-TEST( j1939StackImpl, given_a_j1939_stack_instance_with_a_NULL_dirver_then_stack_is_null )
+TEST( j1939StackImpl, given_null_address_claim_when_creating_a_stack_then_null_returned )
 {
     // given
 
     // when
-    j1939_t testStack = createJ1939StackImpl( NULL, 1u, name );
+    j1939_t testStack = createJ1939StackImpl( NULL, spyCAN );
 
     // then
     CHECK_TRUE( NULL == testStack );
 }
 
-TEST( j1939StackImpl, given_a_j1939_stack_instance_with_a_zero_tick_then_stack_is_null )
+TEST( j1939StackImpl, given_null_CAN_driver_when_creating_a_stack_then_null_returned )
 {
     // given
 
     // when
-    j1939_t testStack = createJ1939StackImpl( spyCAN, 0u, name );
+    j1939_t testStack = createJ1939StackImpl( acl, NULL );
 
     // then
     CHECK_TRUE( NULL == testStack );
 }
 
-TEST( j1939StackImpl, given_a_j1939_stack_instance_with_null_NAME_then_stack_is_null )
-{
-    // given
-
-    // when
-    j1939_t testStack = createJ1939StackImpl( spyCAN, 1u, NULL );
-
-    // then
-    CHECK_TRUE( NULL == testStack );
-}
-
-TEST( j1939StackImpl, given_a_j1939_stack_instance_when_sending_a_message_then_CAN_driver_picks_it_up )
+TEST( j1939StackImpl, given_a_j1939_message_when_sending_it_through_the_interface_then_CAN_driver_picks_it_up )
 {
     // given
     uint8_t data[ 8 ] = { 11u, 22u, 33u, 44u, 55u, 66u, 77u, 88u };
@@ -137,29 +129,6 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_when_sending_a_message_then_C
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
 }
 
-TEST( j1939StackImpl, given_a_j1939_stack_instance_when_receiving_a_message_from_CAN_driver_then_j1939_stack_picks_it_up )
-{
-    // given
-    uint8_t data[ 8 ] = { 11u, 22u, 44u, 33u, 55u, 22u, 77u, 88u };
-    CANMessage_t canMessage = createExtendedCANMessage( 0x14fc8cbbu, data, 8u );    
-
-    mock( "CANSpy" ).expectOneCall( "receiveMessage" )
-        .withPointerParameter( "base", spyCAN )
-        .andReturnValue( canMessage );
-    
-    // when
-    testMessage = receiveJ1939Message( stack  );
-
-    // then
-    UNSIGNED_LONGS_EQUAL( 0xfc8cu, getJ1939MessagePGN( testMessage ) );
-    UNSIGNED_LONGS_EQUAL( 5u, getJ1939MessagePriority( testMessage ) );
-    UNSIGNED_LONGS_EQUAL( 0xffu, getJ1939MessageDA( testMessage ) );
-    UNSIGNED_LONGS_EQUAL( 0xbbu, getJ1939MessageSA( testMessage ) );
-    UNSIGNED_LONGS_EQUAL( 8u, getJ1939MessageDataLength( testMessage ) );
-    MEMCMP_EQUAL( data, getJ1939MessageData( testMessage ), getJ1939MessageDataLength( testMessage ) );
-    destroyCANMessage( canMessage );
-}
-
 TEST( j1939StackImpl, given_a_j1939_stack_instance_when_setting_the_source_address_then_source_address_is_returned_through_the_interface )
 {
     // given
@@ -171,7 +140,7 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_when_setting_the_source_addre
     UNSIGNED_LONGS_EQUAL( 0x32u, getJ1939SourceAddress( stack ) );
 }
 
-TEST( j1939StackImpl, given_a_j1939_stack_instance_when_setting_the_CA_name_then_CA_name_is_returned_through_the_interface )
+TEST( j1939StackImpl, given_a_CA_name_when_setting_the_value_then_it_is_returned )
 {
     // given
     uint8_t expectedCAName[ 8 ] = { 0x11u, 0x22u, 0x33u, 0x44u, 0x55u, 0x66u, 0x77u, 0x88u };
@@ -196,17 +165,6 @@ TEST( j1939StackImpl, given_a_j1939_stack_instance_when_setting_the_CA_name_to_N
     CHECK_TRUE( NULL == caName );
 }
 
-TEST( j1939StackImpl, given_a_j1939_stack_instance_when_getting_configured_stack_tick_in_ms_then_it_is_returned_through_the_interface )
-{
-    // given
-
-    // when
-    uint8_t tickMs = getJ1939ConfiguredTickMs( stack );
-
-    // then
-    UNSIGNED_LONGS_EQUAL( 10u, tickMs );
-}
-
 TEST( j1939StackImpl, given_no_received_messages_when_updating_core_scheduler_then_address_claim_message_sent )
 {
     // given
@@ -228,7 +186,7 @@ TEST( j1939StackImpl, given_2_messages_in_mailbox_but_no_acl_contention_for_more
         .withPointerParameter( "base", spyCAN )
         .andReturnValue( canMessage );
 
-    uint8_t howManyUpdatesIn250Ms = ( uint8_t ) ( 250u / getJ1939ConfiguredTickMs( stack ) );
+    uint8_t howManyUpdatesIn250Ms = ( uint8_t ) ( 250u / ticksMs );
 
     expectNReceivedNullMessages( howManyUpdatesIn250Ms + 1u );
     expectNTimesNoBusOff( howManyUpdatesIn250Ms );
@@ -245,7 +203,7 @@ TEST( j1939StackImpl, given_2_messages_in_mailbox_but_no_acl_contention_for_more
     destroyCANMessage( canMessage );
 }
 
-IGNORE_TEST( j1939StackImpl, given_a_received_address_claim_request_when_updating_core_scheduler_then_ACL_sent )
+TEST( j1939StackImpl, given_normal_traffic_mode_and_a_received_address_claim_request_when_updating_core_scheduler_then_ACL_is_registered_and_sent )
 {
     // given
     uint8_t data[ 3 ];
@@ -253,24 +211,16 @@ IGNORE_TEST( j1939StackImpl, given_a_received_address_claim_request_when_updatin
     data[ 1 ] = ( J1939_AC >> 8u ) & 0xffu;
     data[ 2 ] = ( J1939_AC >> 16u ) & 0xffu;
     CANMessage_t canMessage = createExtendedCANMessage( 0x18eaa300u, data, 3u );
-    mock( "CANSpy" ).expectNCalls( 2, "receiveMessage" )
-        .withPointerParameter( "base", spyCAN )
-        .andReturnValue( canMessage );
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( canMessage );
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( (void*) 0 );
 
-    uint8_t howManyUpdatesIn250Ms = ( uint8_t ) ( 250u / getJ1939ConfiguredTickMs( stack ) );
-
-    expectNReceivedNullMessages( howManyUpdatesIn250Ms + 1u );
-    expectNTimesNoBusOff( howManyUpdatesIn250Ms );
+    setACLStateMachineState( acl, NORMAL_TRAFFIC );
     expectOneCallToSendMessageWithAddressClaim( );
 
     // when
-    for ( uint8_t i = 0u; i < ( howManyUpdatesIn250Ms + 1u ); i++ )
-    {
-        updateJ1939CoreScheduler( stack );
-    }
+    updateJ1939CoreScheduler( stack );
 
     // then
-    CHECK_TRUE( wasJ1939AddressClaimed( stack ) );
     destroyCANMessage( canMessage );
 }
 

@@ -34,16 +34,6 @@ const char* getJ1939StackType( j1939_t self )
     return ( self->type );
 }
 
-j1939Message_t receiveJ1939Message( j1939_t self )
-{
-    j1939Message_t message = NULL;
-    if ( NULL != self )
-    {
-        message = self->iFace->receiveJ1939Message( self );
-    }
-    return ( message );
-}
-
 uint8_t getJ1939SourceAddress( j1939_t self )
 {
     uint8_t address = 0xffu;
@@ -78,16 +68,6 @@ void setJ1939CAName( j1939_t self, const uint8_t* caName )
     {
         self->iFace->setCAName( self, caName );
     }
-}
-
-uint8_t getJ1939ConfiguredTickMs( j1939_t self )
-{
-    uint8_t tickMs = 0u;
-    if ( NULL != self )
-    {
-        tickMs = self->iFace->getTickMs( self );
-    }
-    return ( tickMs );
 }
 
 void updateJ1939CoreScheduler( j1939_t self )

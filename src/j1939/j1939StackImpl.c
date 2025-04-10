@@ -5,7 +5,6 @@
  * @date	2024
  ******************************************************************************/
 #include "j1939StackImpl.h"
-#include "j1939/addressClaimedImpl.h"
 
 /******************************************************************************/
 typedef struct j1939StackImplStruct* j1939StackImpl_t;
@@ -23,7 +22,6 @@ typedef struct j1939StackImplStruct
 static void destroy( j1939_t base )
 {
     j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
-    destroyACL( stack->acl );
     free( stack );
 }
 
@@ -33,15 +31,6 @@ static uint8_t sendMessage( j1939_t base, const j1939Message_t message )
 
     uint8_t status = sendJ1939MessageToDriver( message, stack->driver );
     return ( status );
-}
-
-static j1939Message_t receiveMessage( j1939_t base )
-{
-    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
-
-    j1939Message_t message = receiveJ1939MessageFromDriver( stack->driver );
-
-    return ( message );
 }
 
 static void setSA( j1939_t super, uint8_t address )
@@ -59,18 +48,7 @@ static uint8_t getSA( j1939_t base )
 static void setName( j1939_t super, const uint8_t* caName )
 {
     j1939StackImpl_t self = ( j1939StackImpl_t ) super;
-    if ( caName != NULL )
-    {
-        for ( uint8_t i = 0u; i < 8u; i++ )
-        {
-            self->caNameStorage[ i ] = caName[ i ];
-        }
-        setCAName( self->acl, self->caNameStorage );
-    }
-    else
-    {
-        setCAName( self->acl, NULL );
-    }
+    setCAName( self->acl, caName );
 }
 
 static uint8_t* getName( j1939_t super )
@@ -79,10 +57,23 @@ static uint8_t* getName( j1939_t super )
     return ( getCAName( self->acl ) );
 }
 
-static uint8_t getConfiguredTickMs( j1939_t base )
+static uint32_t getRequestedPGNFromData( const uint8_t* data )
 {
-    j1939StackImpl_t stack = ( j1939StackImpl_t ) base;
-    return ( stack->tickMs );
+    uint32_t requestedPgn = data[ 0 ];
+    requestedPgn |= ( uint32_t ) ( data[ 1 ] << 8UL );
+    requestedPgn |= ( uint32_t ) ( data[ 2 ] << 16UL );
+    return ( requestedPgn );
+}
+
+static void addressClaimHandler( j1939Message_t message, acl_t acl )
+{
+    if ( getJ1939MessagePGN( message ) == J1939_RQST )
+    {
+        if ( ( uint32_t ) J1939_AC == getRequestedPGNFromData( getJ1939MessageData( message ) ) )
+        {
+            registerRequestForACL( acl );
+        }
+    }
 }
 
 static void updateCoreScheduler( j1939_t super )
@@ -90,12 +81,12 @@ static void updateCoreScheduler( j1939_t super )
     j1939StackImpl_t self = ( j1939StackImpl_t ) super;
 
     j1939Message_t message = receiveJ1939MessageFromDriver( self->driver );
-    destroyJ1939Message( message );
 
     while ( NULL != message )
     {
-        message = receiveJ1939MessageFromDriver( self->driver );
+        addressClaimHandler( message, self->acl );
         destroyJ1939Message( message );
+        message = receiveJ1939MessageFromDriver( self->driver );
     }
     updateACLStateMachine( self->acl ); 
 }
@@ -107,22 +98,20 @@ static bool_t wasAddressClaimed( j1939_t super )
 }
 
 /******************************************************************************/
-j1939_t createJ1939StackImpl( canDriver_t driver, uint8_t tickMs, uint8_t* caName )
+j1939_t createJ1939StackImpl( acl_t acl, canDriver_t driver )
 {
     j1939StackImpl_t self = NULL;
 
-    if ( ( NULL != driver ) && ( tickMs > 0u ) && ( NULL != caName ) )
+    if ( acl && driver )
     {
         static j1939InterfaceStruct_t interface =
         {
             destroy,
             sendMessage,
-            receiveMessage,
             setSA,
             getSA,
             setName,
             getName,
-            getConfiguredTickMs,
             updateCoreScheduler,
             wasAddressClaimed
         };
@@ -131,8 +120,7 @@ j1939_t createJ1939StackImpl( canDriver_t driver, uint8_t tickMs, uint8_t* caNam
         self->base.iFace = &interface;
         self->base.type = "J1939Stack";
         self->driver = driver;
-        self->tickMs = tickMs;
-        self->acl = createAddressClaimed( driver, tickMs, caName, 0xffu );
+        self->acl = acl;
     }
 
     return ( ( j1939_t ) self );

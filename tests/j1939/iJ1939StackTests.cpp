@@ -54,26 +54,14 @@ TEST( iJ1939Stack, given_null_stack_when_destroying_the_stack_then_no_seg_fault 
     // then
 }
 
-TEST( iJ1939Stack, given_null_stack_when_receiving_a_j1939_message_then_no_seg_fault )
-{
-    // given
-
-    // when
-    j1939Message_t message = receiveJ1939Message( NULL );
-
-    // then
-    CHECK_TRUE( NULL == message );
-}
-
 TEST( iJ1939Stack, given_null_stack_when_getting_stack_source_address_then_0xff_returned )
 {
     // given
 
     // when
-    uint8_t sourceAddress = getJ1939SourceAddress( NULL );
 
     // then
-    UNSIGNED_LONGS_EQUAL( 0xffu, sourceAddress );
+    UNSIGNED_LONGS_EQUAL( 0xffu, getJ1939SourceAddress( NULL ) );
 }
 
 TEST( iJ1939Stack, given_null_stack_when_setting_stack_source_address_then_noting_happens )
@@ -106,16 +94,6 @@ TEST( iJ1939Stack, given_null_stack_when_setting_CA_name_then_noting_happens )
     setJ1939CAName( NULL, caName );
 
     // then
-}
-
-TEST( iJ1939Stack, given_null_stack_when_getting_configured_tick_then_zero_returned )
-{
-    // given
-
-    // when
-
-    // then
-    UNSIGNED_LONGS_EQUAL( 0u, getJ1939ConfiguredTickMs( NULL ) );
 }
 
 TEST( iJ1939Stack, given_null_stack_when_updating_core_then_nothing_happens )

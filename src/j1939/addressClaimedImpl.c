@@ -23,8 +23,9 @@ struct aclImplStruct
 	uint8_t contentionCounterMs;
 	uint8_t pseudoDelay;
 	uint8_t tickMs;
-	uint8_t state;
-	uint8_t* caName;
+    uint8_t state;
+    uint8_t* caName;
+    uint8_t caNameStorage[ 8 ];
 	uint8_t contenderName[ 8 ];
 };
 
@@ -264,10 +265,22 @@ static void registerRcvMessageWithOwnSA( acl_t super )
     self->wasMessageWithOwnSAReceived = true;
 }
 
-static void setName( acl_t super, uint8_t* name )
+static void copyCAName( aclImpl_t self, const uint8_t* name )
+{
+    for ( uint8_t i = 0u; i < 8u; i++ )
+    {
+        self->caNameStorage[ i ] = name[ i ];
+    }
+    self->caName = self->caNameStorage;
+}
+static void setName( acl_t super, const uint8_t* name )
 {
     aclImpl_t self = ( aclImpl_t ) super;
-    self->caName = name;
+    self->caName = NULL;
+    if ( name != NULL )
+    {
+        copyCAName( self, name );
+    }
 }
 
 /******************************************************************************/
@@ -295,7 +308,7 @@ acl_t createAddressClaimed( canDriver_t driver, uint16_t ticksMS, uint8_t* caNam
         self->base.type = "ACLv1";
         self->driver = driver;
         self->tickMs = ticksMS;
-        self->caName = caName;
+        copyCAName( self, caName );
         self->state = INIT;
         self->contentionCounterMs = self->tickMs;
 		self->wasAddressClaimed = false;

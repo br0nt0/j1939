@@ -99,6 +99,17 @@ TEST( CANMessage, given_a_zero_size_for_data_when_creating_an_extended_CAN_messa
     CHECK_TRUE( message == NULL );
 }
 
+TEST( CANMessage, given_a_dlc_input_bigger_than_8_when_creating_an_extended_CAN_message_then_data_length_is_maximum_8 )
+{
+    // given
+
+    // when
+    message = createExtendedCANMessage( id, data, 9u );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 8u, getCANMessageDLC( message ) );
+}
+
 TEST( CANMessage, given_null_data_when_creating_an_extended_CAN_message_then_null_returned )
 {
     // given
@@ -155,5 +166,16 @@ TEST( CANMessage, given_null_data_when_creating_a_standard_CAN_message_then_null
 
     // then
     CHECK_TRUE( message == NULL );
+}
+
+TEST( CANMessage, given_a_dlc_input_bigger_than_8_when_creating_a_standard_CAN_message_then_data_length_is_maximum_8 )
+{
+    // given
+
+    // when
+    message = createStandardCANMessage( 0x7ffu, data, 9u );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 8u, getCANMessageDLC( message ) );
 }
 

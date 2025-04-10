@@ -60,7 +60,7 @@ void registerACLContention( acl_t acl, const uint8_t* name )
     }
 }
 
-void setCAName( acl_t acl, uint8_t* name )
+void setCAName( acl_t acl, const uint8_t* name )
 {
     if ( acl != NULL )
     {
