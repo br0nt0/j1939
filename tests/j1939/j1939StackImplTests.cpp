@@ -37,19 +37,6 @@ TEST_GROUP( j1939StackImpl )
         mock( "CANSpy" ).checkExpectations( );
         mock( ).clear( );
     }
-    void expectCANMessgeToSucceed( uint32_t id, bool_t isExtended, uint8_t dlc, uint8_t * data )
-    {
-        mock( "CANSpy" ).expectOneCall( "isOperational" )
-            .withPointerParameter( "base", spyCAN )
-            .andReturnValue( true );
-        mock( "CANSpy" ).expectOneCall( "sendMessage" )
-            .withPointerParameter( "base", spyCAN )
-            .withUnsignedIntParameter( "id", id )
-            .withBoolParameter( "isExtended", isExtended )
-            .withUnsignedIntParameter( "dlc", dlc )
-            .withPointerParameter( "data", data )
-            .andReturnValue( CAN_TX_SUCCEEDED );
-    }
     void expectCANOperational( void )
     {
         mock( "CANSpy" ).expectOneCall( "isOperational" )
@@ -65,6 +52,17 @@ TEST_GROUP( j1939StackImpl )
             .withBoolParameter( "isExtended", true )
             .withUnsignedIntParameter( "dlc", 8u )
             .withPointerParameter( "data", getJ1939CAName( stack ) )
+            .andReturnValue( CAN_TX_SUCCEEDED );
+    }
+    void expectCANMessgeToSucceed( uint32_t id, bool_t isExtended, uint8_t dlc, uint8_t * data )
+    {
+        expectCANOperational( );
+        mock( "CANSpy" ).expectOneCall( "sendMessage" )
+            .withPointerParameter( "base", spyCAN )
+            .withUnsignedIntParameter( "id", id )
+            .withBoolParameter( "isExtended", isExtended )
+            .withUnsignedIntParameter( "dlc", dlc )
+            .withPointerParameter( "data", data )
             .andReturnValue( CAN_TX_SUCCEEDED );
     }
     void expectNReceivedNullMessages( uint8_t n )
@@ -223,6 +221,65 @@ TEST( j1939StackImpl, given_normal_traffic_mode_and_a_received_address_claim_req
     // then
     destroyCANMessage( canMessage );
 }
+
+TEST( j1939StackImpl, given_normal_traffic_mode_and_a_received_acl_contention_when_updating_core_scheduler_then_ACL_is_registered_and_sent )
+{
+    // given
+    uint8_t contenderName[ 8 ] = { 0x00u, 0x00u, 0xA0u, 0x32u, 0x08u, 0x82u, 0x02u, 0x89u };
+    CANMessage_t canMessage = createExtendedCANMessage( 0x18eeff00u, contenderName, 8u );
+
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( canMessage );
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( (void*) 0 );
+    
+    setACLStateMachineState( acl, NORMAL_TRAFFIC );
+    expectCANMessgeToSucceed( 0x18eeff80u, true, 8u, getJ1939CAName( stack ) );
+    
+    // when
+    updateJ1939CoreScheduler( stack );
+
+    // then
+    UNSIGNED_LONGS_EQUAL( 128u, getJ1939SourceAddress( stack ) );
+    destroyCANMessage( canMessage );
+}
+
+TEST( j1939StackImpl, given_normal_traffic_mode_and_a_received_message_with_same_address_as_ours_when_updating_core_scheduler_then_ACL_message_is_sent )
+{
+    // given
+    uint8_t data[ 3 ] = { 0x00u, 0x00u, 0xA0u };
+    CANMessage_t canMessage = createExtendedCANMessage( 0x18eeff11u, data, 3u );
+
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( canMessage );
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( (void*) 0 );
+    
+    setACLStateMachineState( acl, NORMAL_TRAFFIC );
+    expectOneCallToSendMessageWithAddressClaim( );
+    
+    // when
+    updateJ1939CoreScheduler( stack );
+
+    // then
+    destroyCANMessage( canMessage );
+}
+
+TEST( j1939StackImpl, given_normal_traffic_mode_and_a_request_for_PGN_message_different_than_ACL_when_updating_core_scheduler_then_ACL_message_is_not_sent )
+{
+    // given
+    uint8_t data[ 3 ] = { 0x00u, 0x00, 0x00u };
+    CANMessage_t canMessage = createExtendedCANMessage( 0x18eaff00u, data, 3u );
+
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( canMessage );
+    mock( "CANSpy" ).expectOneCall( "receiveMessage" ).withPointerParameter( "base", spyCAN ).andReturnValue( (void*) 0 );
+    
+    setACLStateMachineState( acl, NORMAL_TRAFFIC );
+    mock( "CANSpy" ).expectNoCall( "sendMessage" );    
+
+    // when
+    updateJ1939CoreScheduler( stack );
+
+    // then
+    destroyCANMessage( canMessage );
+}
+
 
 
 

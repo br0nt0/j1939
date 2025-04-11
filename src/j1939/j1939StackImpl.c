@@ -74,6 +74,16 @@ static void addressClaimHandler( j1939Message_t message, acl_t acl )
             registerRequestForACL( acl );
         }
     }
+
+    if ( getJ1939MessagePGN( message ) == J1939_AC )
+    {
+        registerACLContention( acl, getJ1939MessageData( message ) );
+    }
+
+    if ( getJ1939MessageSA( message ) == getACLSourceAddress( acl ) )
+    {
+        registerRcvMessageWithOwnSourceAddress( acl );
+    }
 }
 
 static void updateCoreScheduler( j1939_t super )
