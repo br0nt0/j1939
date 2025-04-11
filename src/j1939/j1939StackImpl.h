@@ -1,18 +1,17 @@
 /*******************************************************************************
- * @file	messageConverter.h
- * @brief	
+ * @file	j1939StackImpl.h
+ * @brief	J1939 stack implementation
  * @author	@br0nt0
  * @date	2024
  ******************************************************************************/
-#ifndef MESSAGECONVERTER_H_
-#define MESSAGECONVERTER_H_
+#ifndef J1939STACKIMPL_H_
+#define J1939STACKIMPL_H_
 /******************************************************************************/
-#include "commonTypes.h"
+#include "iJ1939Stack.h"
 #include "drivers/CANDriver.h"
-#include "j1939Stack.h"
+#include "addressClaimedImpl.h"
 
 /******************************************************************************/
-void encodeCANMessage( canMessage_t canMessage, const j1939Message_t j1939Message );
-void decodeMessage( j1939Message_t j1939Message, const canMessage_t canMessage );
+j1939_t createJ1939StackImpl( acl_t acl, canDriver_t driver );
 
-#endif /* MESSAGECONVERTER_H_ */
+#endif /* J1939STACKIMPL_H_ */

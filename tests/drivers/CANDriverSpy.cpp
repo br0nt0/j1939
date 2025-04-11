@@ -29,20 +29,20 @@ static bool_t isOperational( canDriver_t base )
     return ( mock( "CANSpy" ).actualCall( "isOperational" ).withPointerParameter( "base", base ).returnBoolValue( ) );
 }
 
-static uint8_t sendMessage( canDriver_t base, const canMessage_t message )
+static uint8_t sendMessage( canDriver_t base, const CANMessage_t message )
 {
     return ( static_cast< uint8_t >( mock( "CANSpy" ).actualCall( "sendMessage" )
                                      .withPointerParameter( "base", base )
-                                     .withUnsignedIntParameter( "id", message->id )
-                                     .withBoolParameter( "isExtended", message->isExtended )
-                                     .withUnsignedIntParameter( "dlc", message->dlc )
-                                     .withPointerParameter( "data", message->data )
+                                     .withUnsignedIntParameter( "id", getCANMessageID( message ) )
+                                     .withBoolParameter( "isExtended", isCANMessageExtended( message ) )
+                                     .withUnsignedIntParameter( "dlc", getCANMessageDLC( message ) )
+                                     .withPointerParameter( "data", getCANMessageData( message ) )
                                      .returnUnsignedIntValueOrDefault( 0u ) ) );
 }
 
-static canMessage_t receiveMessage( canDriver_t base )
+static CANMessage_t receiveMessage( canDriver_t base )
 {
-    return ( static_cast< canMessage_t >( mock( "CANSpy" ).actualCall( "receiveMessage" )
+    return ( static_cast< CANMessage_t >( mock( "CANSpy" ).actualCall( "receiveMessage" )
                                                 .withPointerParameter( "base", base )
                                                 .returnPointerValue( ) ) );
 }

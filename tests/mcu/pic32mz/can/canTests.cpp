@@ -21,7 +21,7 @@ TEST_GROUP( can )
     canDriver_t driver;
     canRegisters_t canRegs;
     canTxMessageBuffer_t txMessageBuffer;
-    canMessageStruct_t canMessage;
+    CANMessage_t canMessage = NULL;
     uint8_t data[ 4 ] = { 0x11, 0x22, 0x33, 0x44 };
     void setup( void )
     {
@@ -32,6 +32,7 @@ TEST_GROUP( can )
     void teardown( void )
     {
         destroyCANDriver( driver );
+        destroyCANMessage( canMessage );
         mock( "PIC32MZ_CAN" ).checkExpectations( );
 		mock( ).clear( );
     }
@@ -60,11 +61,8 @@ TEST_GROUP( can )
     }
     void setUpExtendedTransmittedMessage( )
     {
-        canMessage.id = 0x1fffffffu;
-        canMessage.dlc = 4u;
-        canMessage.isExtended = true;
-        canMessage.data = data;
-        
+        canMessage = createExtendedCANMessage( 0x1fffffffu, data, 4u );
+
         expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
     }
 };
@@ -141,10 +139,10 @@ TEST( can, given_an_empty_receive_fifo_when_receiving_a_CAN_message_then_null_is
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 0u;
 
     // when
-    canMessage_t message = receiveCANMessage( driver );
+    canMessage = receiveCANMessage( driver );
 
     // then
-    POINTERS_EQUAL( NULL, message );
+    POINTERS_EQUAL( NULL, canMessage );
 }
 
 TEST( can, given_a_non_empty_receive_fifo_and_a_null_user_address_register_when_receiving_a_CAN_message_then_null_is_returned )
@@ -154,10 +152,10 @@ TEST( can, given_a_non_empty_receive_fifo_and_a_null_user_address_register_when_
     expectOneCallToGetRxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO0, NULL );
 
     // when
-    canMessage_t message = receiveCANMessage( driver );
+    canMessage = receiveCANMessage( driver );
 
     // then
-    POINTERS_EQUAL( NULL, message );
+    POINTERS_EQUAL( NULL, canMessage );
 }
 
 TEST( can, given_fifo_0_with_one_message_when_receiving_a_CAN_message_then_an_extended_frame_can_be_received )
@@ -172,12 +170,12 @@ TEST( can, given_fifo_0_with_one_message_when_receiving_a_CAN_message_then_an_ex
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
-    canMessage_t message = receiveCANMessage( driver );
+    canMessage = receiveCANMessage( driver );
 
     // then
-    UNSIGNED_LONGS_EQUAL( msg.eid.EID | ( msg.sid.SID << 18u ), message->id );
-    UNSIGNED_LONGS_EQUAL( msg.eid.DLC, message->dlc );
-    CHECK_TRUE( message->isExtended );
+    UNSIGNED_LONGS_EQUAL( msg.eid.EID | ( msg.sid.SID << 18u ), getCANMessageID( canMessage ) );
+    UNSIGNED_LONGS_EQUAL( msg.eid.DLC, getCANMessageDLC( canMessage ) );
+    CHECK_TRUE( isCANMessageExtended( canMessage ) );
 }
 
 
@@ -193,12 +191,12 @@ TEST( can, given_fifo_0_with_one_message_when_receiving_a_CAN_message_then_a_sta
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
-    canMessage_t message = receiveCANMessage( driver );
+    canMessage = receiveCANMessage( driver );
 
     // then
-    UNSIGNED_LONGS_EQUAL( msg.sid.SID, message->id );
-    UNSIGNED_LONGS_EQUAL( msg.eid.DLC, message->dlc );
-    CHECK_FALSE( message->isExtended );
+    UNSIGNED_LONGS_EQUAL( msg.sid.SID, getCANMessageID( canMessage ) );
+    UNSIGNED_LONGS_EQUAL( msg.eid.DLC, getCANMessageDLC( canMessage ) );
+    CHECK_FALSE( isCANMessageExtended( canMessage ) );
 }
 
 TEST( can, given_fifo_0_with_message_with_data_when_receiving_a_CAN_message_then_data_can_be_read )
@@ -211,10 +209,10 @@ TEST( can, given_fifo_0_with_message_with_data_when_receiving_a_CAN_message_then
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
-    canMessage_t message = receiveCANMessage( driver );
+    canMessage = receiveCANMessage( driver );
 
     // then
-    MEMCMP_EQUAL( msg.data, message->data, message->dlc );
+    MEMCMP_EQUAL( msg.data, getCANMessageData( canMessage ), getCANMessageDLC( canMessage ) );
 }
 
 TEST( can, given_fifo_0_as_receive_fifo_when_receiving_a_CAN_message_then_UINC_is_set )
@@ -225,7 +223,7 @@ TEST( can, given_fifo_0_as_receive_fifo_when_receiving_a_CAN_message_then_UINC_i
     canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOINT.bits.RXNEMPTYIF = 1u;
 
     // when
-    ( void ) receiveCANMessage( driver );
+    canMessage = receiveCANMessage( driver );
 
     // then
     UNSIGNED_LONGS_EQUAL( CXFIFOCON_UINC_MASK, canRegs.canFifoRegisters[ CAN_FIFO0 ].CxFIFOCONSET );
@@ -238,60 +236,54 @@ TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_extended_CAN_message_to
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
-    UNSIGNED_LONGS_EQUAL( canMessage.id >> 18u & 0x7ffu, txMessageBuffer.sid.SID );
-	UNSIGNED_LONGS_EQUAL( canMessage.id & 0x3ffffu, txMessageBuffer.eid.EID );
-	UNSIGNED_LONGS_EQUAL( canMessage.dlc, txMessageBuffer.eid.DLC );
+    UNSIGNED_LONGS_EQUAL( getCANMessageID( canMessage ) >> 18u & 0x7ffu, txMessageBuffer.sid.SID );
+    UNSIGNED_LONGS_EQUAL( getCANMessageID( canMessage ) & 0x3ffffu, txMessageBuffer.eid.EID );
+	UNSIGNED_LONGS_EQUAL( getCANMessageDLC( canMessage ), txMessageBuffer.eid.DLC );
 	UNSIGNED_LONGS_EQUAL( 1u, txMessageBuffer.eid.SRR );
 	UNSIGNED_LONGS_EQUAL( 1u, txMessageBuffer.eid.IDE );
 	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RTR );
 	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB0 );
     UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB1 );
-    MEMCMP_EQUAL( canMessage.data, txMessageBuffer.data, txMessageBuffer.eid.DLC );
+    MEMCMP_EQUAL( getCANMessageData( canMessage ), txMessageBuffer.data, txMessageBuffer.eid.DLC );
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
 }
 
 TEST( can, given_fifo_1_as_transmit_fifo_when_sending_an_standard_CAN_message_to_HW_then_registers_are_loaded_accordingly )
 {
     // given
-    canMessage.id = 0x7ffu;
-	canMessage.dlc = 4u;
-	canMessage.isExtended = false;
-    canMessage.data = data;
-    
+    canMessage = createStandardCANMessage( 0x7ffu, data, 4u );
+
     expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
-    UNSIGNED_LONGS_EQUAL( canMessage.id & 0x7ffu, txMessageBuffer.sid.SID );
-	UNSIGNED_LONGS_EQUAL( canMessage.dlc, txMessageBuffer.eid.DLC );
+    UNSIGNED_LONGS_EQUAL( getCANMessageID( canMessage ) & 0x7ffu, txMessageBuffer.sid.SID );
+	UNSIGNED_LONGS_EQUAL( getCANMessageDLC( canMessage ), txMessageBuffer.eid.DLC );
 	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.SRR );
 	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.IDE );
 	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RTR );
 	UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB0 );
     UNSIGNED_LONGS_EQUAL( 0u, txMessageBuffer.eid.RB1 );
-    MEMCMP_EQUAL( canMessage.data, txMessageBuffer.data, txMessageBuffer.eid.DLC );
+    MEMCMP_EQUAL( getCANMessageData( canMessage ), txMessageBuffer.data, txMessageBuffer.eid.DLC );
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
 }
 
 TEST( can, given_fifo_1_as_transmit_fifo_when_sending_a_CAN_message_to_HW_then_transmit_fifo_is_flushed )
 {
     // given
-    canMessage.id = 0x7ffu;
-	canMessage.dlc = 4u;
-	canMessage.isExtended = false;
-    canMessage.data = data;
-    
+    canMessage = createStandardCANMessage( 0x7ffu, data, 4u );
+
     expectOneCallToGetTxFifoUserAddressRegisterOfModule( CAN1, CAN_FIFO1, &txMessageBuffer );
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
@@ -302,16 +294,13 @@ TEST( can, given_full_transmit_fifo_when_sending_a_CAN_message_to_HW_then_no_mes
 {
     // given
     txMessageBuffer.sid.SID = 0x123u;
-    canMessage.id = 0x7ffu;
-	canMessage.dlc = 4u;
-	canMessage.isExtended = false;
-    canMessage.data = data;
-    
+    canMessage = createStandardCANMessage( 0x7ffu, data, 4u );
+
     mock( "PIC32MZ_CAN" ).expectNoCall( "getPIC32MZRxCxFIFOUA" );
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 0u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_BUFFER_FULL, status );
@@ -325,7 +314,7 @@ TEST( can, given_a_transmit_fifo_when_sending_a_CAN_message_to_HW_then_UINC_regi
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOINT.bits.TXNFULLIF = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_SUCCEEDED, status );
@@ -341,7 +330,7 @@ TEST( can, given_a_transmission_error_when_sending_a_CAN_message_to_HW_then_stat
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOCON.bits.TXERR = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_ERROR_DETECTED, status );
@@ -355,7 +344,7 @@ TEST( can, given_a_transmission_message_abort_when_sending_a_CAN_message_to_HW_t
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOCON.bits.TXABAT = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_MESSAGE_ABORTED, status );
@@ -369,7 +358,7 @@ TEST( can, given_a_transmission_message_arbitration_lost_when_sending_a_CAN_mess
     canRegs.canFifoRegisters[ CAN_FIFO1 ].CxFIFOCON.bits.TXLARB = 1u;
 
     // when
-    uint8_t status = sendCANMessage( driver, &canMessage );
+    uint8_t status = sendCANMessage( driver, canMessage );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_TX_MESSAGE_ARBITRATION_LOST, status );

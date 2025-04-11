@@ -14,11 +14,15 @@ extern "C"
 
 TEST_GROUP( CANDriver )
 {
+    CANMessage_t message;
+    uint8_t data[ 3 ] = { 1u, 2u, 3u };
     void setup( void )
     {
+        
     }
     void teardown( void )
     {
+        destroyCANMessage( message );
     }
 };
 
@@ -35,10 +39,10 @@ TEST( CANDriver, given_null_driver_when_destroying_CAN_driver_then_no_seg_fault 
 TEST( CANDriver, given_null_driver_when_sending_a_messge_then_no_seg_fault )
 {
     // given
-    canMessageStruct_t message;
+    message = createExtendedCANMessage( 0x123456u, data, 3u );
 
     // when
-    uint8_t status = sendCANMessage( NULL, &message );
+    uint8_t status = sendCANMessage( NULL, message );
 
     // then
     UNSIGNED_LONGS_EQUAL( CAN_DRIVER_IS_NULL, status );
@@ -72,7 +76,7 @@ TEST( CANDriver, given_null_driver_when_receiving_a_message_then_no_seg_fault )
     // given
 
     // when
-    canMessage_t message = receiveCANMessage( NULL );
+    message = receiveCANMessage( NULL );
 
     // then
     CHECK_TRUE( NULL == message );

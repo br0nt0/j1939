@@ -1,10 +1,10 @@
 /*******************************************************************************
- * @file	j1939Stack.c
- * @brief
+ * @file	iJ1939Stack.c
+ * @brief   interface of J1939 stack
  * @author  @br0nt0
  * @date	2024
  ******************************************************************************/
-#include "j1939Stack.h"
+#include "iJ1939Stack.h"
 /******************************************************************************/
 
 /******************************************************************************/
@@ -32,16 +32,6 @@ uint8_t sendJ1939Message( j1939_t self, const j1939Message_t message )
 const char* getJ1939StackType( j1939_t self )
 {
     return ( self->type );
-}
-
-j1939Message_t receiveJ1939Message( j1939_t self )
-{
-    j1939Message_t message = NULL;
-    if ( NULL != self )
-    {
-        message = self->iFace->receiveJ1939Message( self );
-    }
-    return ( message );
 }
 
 uint8_t getJ1939SourceAddress( j1939_t self )
@@ -80,14 +70,21 @@ void setJ1939CAName( j1939_t self, const uint8_t* caName )
     }
 }
 
-uint8_t getJ1939ConfiguredTickMs( j1939_t self )
+void updateJ1939CoreScheduler( j1939_t self )
 {
-    uint8_t tickMs = 0u;
     if ( NULL != self )
     {
-        tickMs = self->iFace->getTickMs( self );
+        self->iFace->updateCoreScheduler( self );
     }
-    return ( tickMs );
 }
 
+bool_t wasJ1939AddressClaimed( j1939_t self )
+{
+    bool_t wasAddressClaimed = false;
+    if ( NULL != self )
+    {
+        wasAddressClaimed = self->iFace->wasAddressClaimed( self );
+    }
+    return ( wasAddressClaimed );
+}
 

@@ -58,60 +58,62 @@ TEST( CANDriverSpy, given_spy_CAN_driver_when_transmitting_a_message_then_the_ex
 {
     // given
     uint8_t data[ 8 ] = { 7u, 6u, 5u, 4u, 3u, 2u, 1u, 0u };
-    canMessageStruct_t message;
-    message.id = 0x1cfd5411u;
-    message.dlc = 8u;
-    message.isExtended = true;
-    message.data = data;
+    CANMessage_t message = createExtendedCANMessage( 0x1cfd5411u, data, 8u );
     mock( "CANSpy" ).expectOneCall( "sendMessage" )
         .withPointerParameter( "base", spy )
-        .withUnsignedIntParameter( "id", message.id )
-        .withBoolParameter( "isExtended", message.isExtended )
-        .withUnsignedIntParameter( "dlc", message.dlc )
-        .withPointerParameter( "data", message.data )
+        .withUnsignedIntParameter( "id", getCANMessageID( message ) )
+        .withBoolParameter( "isExtended", isCANMessageExtended( message ) )
+        .withUnsignedIntParameter( "dlc", getCANMessageDLC( message ) )
+        .withPointerParameter( "data", getCANMessageData( message ) )
         .andReturnValue( CAN_TX_SUCCEEDED );
 
     // when
-    uint8_t result = sendCANMessage( spy, &message );
+    uint8_t result = sendCANMessage( spy, message );
 
     // then
     UNSIGNED_LONGS_EQUAL( result, CAN_TX_SUCCEEDED );
+    destroyCANMessage( message );
 }
 
 TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_one_message_then_the_expected_message_is_returned )
 {
     // given
-    canMessageStruct_t expectedMessage;
+    uint8_t data[ 3 ] = { 3u, 4u, 5u };
+    CANMessage_t expectedMessage = createExtendedCANMessage( 0x423432u, data, 3u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", spy )
-        .andReturnValue( &expectedMessage );
+        .andReturnValue( expectedMessage );
 
     // when
-    canMessage_t actualMessage = receiveCANMessage( spy );
+    CANMessage_t actualMessage = receiveCANMessage( spy );
 
     // then
-    POINTERS_EQUAL( &expectedMessage, actualMessage );
+    POINTERS_EQUAL( expectedMessage, actualMessage );
+    destroyCANMessage( actualMessage );
 }
 
 TEST( CANDriverSpy, given_spy_CAN_driver_when_receiving_many_messages_then_the_expected_messages_are_returned )
 {
     // given
-    canMessageStruct_t expectedMessage1;
-    canMessageStruct_t expectedMessage2;
+    uint8_t data[ 3 ] = { 1u,2u,3u };
+    CANMessage_t expectedMessage1 = createExtendedCANMessage( 0x21345u, data, 3u );
+    CANMessage_t expectedMessage2 = createExtendedCANMessage( 0x543253u, data, 3u );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", spy )
-        .andReturnValue( &expectedMessage1 );
+        .andReturnValue( expectedMessage1 );
     mock( "CANSpy" ).expectOneCall( "receiveMessage" )
         .withPointerParameter( "base", spy )
-        .andReturnValue( &expectedMessage2 );
+        .andReturnValue( expectedMessage2 );
     
     // when
-    canMessage_t actualMessage1 = receiveCANMessage( spy );
-    canMessage_t actualMessage2 = receiveCANMessage( spy );
+    CANMessage_t actualMessage1 = receiveCANMessage( spy );
+    CANMessage_t actualMessage2 = receiveCANMessage( spy );
 
     // then
-    POINTERS_EQUAL( &expectedMessage1, actualMessage1 );
-    POINTERS_EQUAL( &expectedMessage2, actualMessage2 );
+    POINTERS_EQUAL( expectedMessage1, actualMessage1 );
+    POINTERS_EQUAL( expectedMessage2, actualMessage2 );
+    destroyCANMessage( actualMessage1 );
+    destroyCANMessage( actualMessage2 );
 }
 
 TEST( CANDriverSpy, given_spy_CAN_driver_when_checking_if_buss_off_state_then_value_is_returned )

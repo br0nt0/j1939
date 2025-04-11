@@ -96,7 +96,17 @@
 			"canenumtypes.h": "c",
 			"cantypes.h": "c",
 			"candriverinterface.h": "c",
-			"canrxtxstructures.h": "c"
+			"canrxtxstructures.h": "c",
+			"iaddressclaimed.h": "c",
+			"addressclaimedimpl.h": "c",
+			"j1939stackimpl.h": "c",
+			"j1939message.h": "c",
+			"ij1939stack.h": "c",
+			"memory": "cpp",
+			"cstdint": "c",
+			"stdint.h": "c",
+			"stdint-gcc.h": "c",
+			"extendedcanmessage.h": "c"
 		}
 	}
 }
